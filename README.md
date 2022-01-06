@@ -27,28 +27,39 @@ Here are all the available config options:
 # Heading
 
 Test:    [[#Heading]]
-Test 2:  [link](#Heading)
 
 asd
+
 sa
+
 das
+
 das
+
 d
+
 sa
+
 dsa
-d
 
+d
 
 asd
+
 sad
+
 as
+
 d
 
+sad
 
 sad
-sad
+
 as
-d
 
+d
 
 asd
+
+Test 2:  [link](#Heading)
