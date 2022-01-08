@@ -1,5 +1,7 @@
 # Discord Chat exporter
 
+> :warning: THIS PROJECT IS STILL UNDER DEVELOPMENT, NOT EVEN OUT AS A BETA :warning:
+
 This is a golang implemintation of a discord chat explorer i found a while back & can't find again
 
 ## Features
@@ -11,6 +13,7 @@ This is a golang implemintation of a discord chat explorer i found a while back 
 - Allows filters that aren't mutually exclusive
 - Golang superiority
 - Mass downloads from guild(s)
+- Bloatless 
 
 ## Config
 

@@ -66,10 +66,14 @@ func Load() Config {
 	for _, ogId := range idGotten {
 		id, idOk := VerifySnowflake(ogId)
 		if !idOk {
-			fmt.Printf("WARNING! %v is not a valid discord id!", ogId)
+			fmt.Printf("WARNING! %v is not a valid discord id!\n", ogId)
 		} else {
 			ids = append(ids, id)
 		}
+	}
+
+	if len(ids) == 0 {
+		panic("No valid IDs were found!")
 	}
 
 	config.Ids = ids

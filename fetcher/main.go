@@ -7,69 +7,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ShadiestGoat/DiscordChatExporter/config"
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
 
-const BASE = "https://discordapp.com/api/v9"
-
-type SingleMessageSearch struct {
-	Msgs []Message `json:"messages"`
-}
-
-var ErrMsgNotFound = errors.New("msg not found")
-var Err404 = errors.New("404")
-
-func (conf ConfigType) discordFetch(uri string, body *[]byte) error {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", BASE, uri), nil)
-	tools.PanicIfErr(err)
-	req.Header.Set("authorization", conf.Token)
-	client := http.Client{
-		Timeout: time.Second * 20,
-	}
-	res, err := client.Do(req)
-	tools.PanicIfErr(err)
-	panic(res.StatusCode)
-	resBody, err := ioutil.ReadAll(res.Body)
-	tools.PanicIfErr(err)
-	*body = resBody
-	return nil
-}
-
-func (conf ConfigType) FetchMsgId(channel string, id string) (Message, error) {
-	resBody := []byte{}
-	err := conf.discordFetch(fmt.Sprintf("/channels/%v", channel), &resBody) // we don't actuall care about output so it's fine to use resBody
-	if errors.Is(err, Err404) {
-		panic(fmt.Sprintf("CHANNEL '%v' was not found", channel))
-	} else {
-		tools.PanicIfErr(err)
-	}
-	
-	err = conf.discordFetch(fmt.Sprintf("/channels/%v/messages?around=%v&limit=1", channel, id), &resBody)
-	if string(resBody) == "[]" {
-		return Message{}, ErrMsgNotFound
-	}
-	msgs := SingleMessageSearch{}
-	err = json.Unmarshal(resBody, &msgs)
-	tools.PanicIfErr(err)
-	return msgs.Msgs[0], nil
-}
-
 type ConfigType config.Config
 
-type JSONMetaData struct {
-	Msgs []Message `json:"messages"`
-	IDToIndex map[string]int `json:"idToIndex"`
-	ByAuthor map[string][]string `json:"byAuthor"`
-	Attachments []JSONAttachment `json:"attachments"`
-	AuthorAttachment map[string]int `json:"attachment_byAuthor"`
-}
 
-type JSONAttachment struct {
-	Attachment
-	AuthorID string
+type NewDMChannelResp struct {
+	Id string `json:"id"`
 }
 
 func (conf ConfigType) FetchAll() {
@@ -80,6 +29,29 @@ func (conf ConfigType) FetchAll() {
 	minTime := conf.Filter.MinTime
 	maxMsg := Message{}
 	minMsg := Message{}
+
+	switch conf.IdType {
+		case config.ID_TYPE_CHANNEL:
+		case config.ID_TYPE_GUILD:
+
+		case config.ID_TYPE_USER:
+			newIds := []string{}
+			for _, id := range conf.Ids {
+				resBody := []byte{}
+				err := conf.discordRequest(http.MethodPost, "/users/@me/channels", strings.NewReader(fmt.Sprintf(`{"recipient_id":"%v"}`, id)),&resBody)
+				if errors.Is(err, Err404) {
+					fmt.Printf("Warning! %v is either not a user, or a dm cannot be opened with them. You have to manually get the id from them!\n", id)
+				} else {
+					tools.PanicIfErr(err)
+				}
+				resp := NewDMChannelResp{}
+				err = json.Unmarshal(resBody, &resp)
+				tools.PanicIfErr(err)
+				newIds = append(newIds, resp.Id)
+			}
+			conf.Ids = newIds
+
+	}
 	
 	if len(conf.Ids) == 1 {
 		needChecking := 0

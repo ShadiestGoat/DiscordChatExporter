@@ -207,6 +207,20 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+
+type JSONMetaData struct {
+	Msgs []Message `json:"messages"`
+	IDToIndex map[string]int `json:"idToIndex"`
+	ByAuthor map[string][]string `json:"byAuthor"`
+	Attachments []JSONMetaAttachment `json:"attachments"`
+	AuthorAttachment map[string]int `json:"attachment_byAuthor"`
+}
+
+type JSONMetaAttachment struct {
+	Attachment
+	AuthorID string
+}
+
 // 	"mentions": [],
 // 	"mention_roles": [],
 // 	"pinned": false,
