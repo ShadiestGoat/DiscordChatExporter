@@ -22,10 +22,34 @@ type Message struct {
 	IsEdited bool
 }
 
+type ChannelType int8
+
+const (
+	CHANNEL_TYPE_GUILD_TEXT ChannelType = iota
+	CHANNEL_TYPE_DM
+	CHANNEL_TYPE_GUILD_VOICE
+	CHANNEL_TYPE_GROUP_DM
+	CHANNEL_TYPE_GUILD_CATEGORY
+	CHANNEL_TYPE_GUILD_NEWS
+	CHANNEL_TYPE_GUILD_STORE
+	CHANNEL_TYPE_GUILD_NEWS_THREAD
+	CHANNEL_TYPE_GUILD_PUBLIC_THREAD
+	CHANNEL_TYPE_GUILD_PRIVATE_THREAD
+	CHANNEL_TYPE_GUILD_STAGE_VOICE
+)
+
+type Channel struct {
+	Id string `json:"id"`
+	Nsfw bool `json:"nsfw"`
+	Name string `json:"name"`
+	Type ChannelType `json:"type"`
+}
+
 type Author struct {
 	ID string `json:"id"`
 	Name string `json:"username"`
 	Avatar string `json:"avatar"`
+	Discriminator string `json:"discriminator"`
 }
 
 type Attachment struct {

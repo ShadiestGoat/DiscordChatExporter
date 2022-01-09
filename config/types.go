@@ -34,5 +34,6 @@ type Config struct {
 	ExportHtmlThemeName string
 	ExportJsonMeta bool
 	ExportTextFormat string
+	IgnoreNsfw bool
 	Filter MsgFilter
 }

@@ -8,5 +8,5 @@ import (
 func main() {
 	conf := config.Load()
 	fetchConf := fetcher.ConfigType(conf)
-	fetchConf.FetchAll()
+	fetchConf.FetchMain()
 }

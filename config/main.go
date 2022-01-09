@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 	"github.com/joho/godotenv"
 )
 
@@ -52,6 +53,11 @@ func Load() Config {
 			config.IdType = ID_TYPE_CHANNEL
 		case "GUILD":
 			config.IdType = ID_TYPE_GUILD
+			if len(os.Getenv("IGNORE_NSFW_CHANNEL")) != 0 {
+				ignore, err := ParseBool(os.Getenv("IGNORE_NSFW_CHANNEL"))
+				tools.PanicIfErr(err)
+				config.IgnoreNsfw = ignore
+			}
 		default:
 			if len(IdType) == 0 {
 				config.IdType = ID_TYPE_CHANNEL

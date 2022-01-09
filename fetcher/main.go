@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
-	"time"
-
 	"github.com/ShadiestGoat/DiscordChatExporter/config"
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
@@ -21,7 +18,23 @@ type NewDMChannelResp struct {
 	Id string `json:"id"`
 }
 
-func (conf ConfigType) FetchAll() {
+func (conf ConfigType) checkToken() {
+	resp := []byte{}
+	err := conf.discordFetch("/users/@me", &resp)
+	if errors.Is(err, ErrBadAuth) {
+		panic("Warning! This token is invalid!")
+	} else {
+		tools.PanicIfErr(err)
+	}
+	user := Author{}
+	json.Unmarshal(resp, &user)
+	fmt.Printf("Token is valid! Logged in as %v#%v!\n", user.Name, user.Discriminator)
+}
+
+
+func (conf ConfigType) FetchMain() {
+	conf.checkToken()
+
 	ParsedMessages := map[string]JSONMetaData{}
 	NumLeft := conf.Filter.NumMax
 	
@@ -33,7 +46,44 @@ func (conf ConfigType) FetchAll() {
 	switch conf.IdType {
 		case config.ID_TYPE_CHANNEL:
 		case config.ID_TYPE_GUILD:
+			parsedGuilds := map[string]bool{}
 
+			for _, id := range conf.Ids {
+				if _, ok := parsedGuilds[id]; ok {
+					continue
+				}
+				parsedGuilds[id] = true
+			}
+
+			conf.Ids = []string{}
+			for _, guildId := range parsedGuilds {
+				resp := []byte{}
+				err := conf.discordFetch(fmt.Sprintf("/guilds/%v/channels", guildId), &resp)
+				if errors.Is(err, Err404) {
+					fmt.Printf("Warning! %v is not a guild id! Ignoring...", guildId)
+					continue
+				} else {
+					tools.PanicIfErr(err)
+				}
+				allChannels := []Channel{}
+				json.Unmarshal(resp, &allChannels)
+				chanIds := []string{}
+				for _, channel := range allChannels {
+					switch channel.Type {
+						case CHANNEL_TYPE_GUILD_CATEGORY, 
+							 CHANNEL_TYPE_GUILD_STAGE_VOICE, 
+							 CHANNEL_TYPE_GUILD_STORE, 
+							 CHANNEL_TYPE_GUILD_VOICE:
+							 	continue
+					}
+					if channel.Nsfw && conf.IgnoreNsfw {
+						continue
+					}
+					chanIds = append(chanIds, channel.Id)
+				}
+				conf.Ids = append(conf.Ids, chanIds...)
+			}
+			
 		case config.ID_TYPE_USER:
 			newIds := []string{}
 			for _, id := range conf.Ids {
@@ -50,7 +100,6 @@ func (conf ConfigType) FetchAll() {
 				newIds = append(newIds, resp.Id)
 			}
 			conf.Ids = newIds
-
 	}
 	
 	if len(conf.Ids) == 1 {
@@ -106,20 +155,14 @@ func (conf ConfigType) FetchAll() {
 			if len(messages) != 0 {
 				beforeStr = fmt.Sprintf("&before=%v", messages[len(messages)-1].ID)
 			}
-			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v/channels/%v/messages?limit=100%v", BASE, channel, beforeStr), nil) // limit=2, because its non inclusive ://
+			resp := []byte{}
+			err := conf.discordFetch(fmt.Sprintf("/channels/%v/messages?limit=50%v", channel, beforeStr), &resp)
 			tools.PanicIfErr(err)
-			req.Header.Set("authorization", conf.Token)
-			client := http.Client{
-				Timeout: time.Second * 20,
-			}
-			res, err := client.Do(req)
-			tools.PanicIfErr(err)
-			resBody, err := ioutil.ReadAll(res.Body)
-			tools.PanicIfErr(err)
-			parsed := []Message{}
-			json.Unmarshal(resBody, &parsed)
-			messages = append(messages, parsed...)
-			done = true
+			fmt.Println(string(resp))
+			// parsed := []Message{}
+			// json.Unmarshal(resp, &parsed)
+			// messages = append(messages, parsed...)
+			// done = true
 		}
 	}
 	gotten, err := json.Marshal(ParsedMessages)
