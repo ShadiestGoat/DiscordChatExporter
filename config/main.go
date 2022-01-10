@@ -181,5 +181,11 @@ func Load() Config {
 			panic("AFTER_TIME is after BEFORE_TIME")
 		}
 	}
+	envLimit := os.Getenv("USE_LIMIT_50")
+	if len(envLimit) != 0 {
+		parsedLimit, err := ParseBool(envLimit)
+		tools.PanicIfErr(err)
+		config.UseLimit50 = parsedLimit
+	}
 	return config
 }

@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+
 	"github.com/ShadiestGoat/DiscordChatExporter/config"
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
@@ -133,7 +135,7 @@ func (conf ConfigType) FetchMain() {
 		}
 	}
 
-	if maxTime > maxMsg.Timestamp {
+	if maxTime > maxMsg.Timestamp && maxMsg.Timestamp != 0 {
 		maxTime = maxMsg.Timestamp
 	}
 
@@ -145,24 +147,71 @@ func (conf ConfigType) FetchMain() {
 		if NumLeft == 0 {
 			break
 		}
-		done := false
-		messages := []Message{}
-		for !done {
-			if NumLeft == 0 {
+		outPutDir := tools.ParseTemplate(conf.ExportLocation, map[string]string{
+			"CHANNEL_ID": channel,
+		})
+
+		os.Mkdir(outPutDir, 0755)
+		if conf.DownloadMedia {
+			os.Mkdir(filepath.Join(outPutDir, "media"), 0755)
+		}
+
+		file, err := os.Create(filepath.Join(outPutDir, "content"))
+
+		tools.PanicIfErr(err)
+
+		lastMsgId := ""
+		limit := 100
+		if conf.UseLimit50 {
+			limit = 50
+		}
+
+		for {
+			fin := false
+			allMsgs := conf.FetchChannelMessages(channel, lastMsgId, limit)
+
+			if len(allMsgs) != limit {
+				fin = true // don't break because you still need proccessing
+			}
+
+			for i, j := 0, len(allMsgs)-1; i < j; i, j = i+1, j-1 {allMsgs[i], allMsgs[j] = allMsgs[j], allMsgs[i]} //shameless stealing from so https://stackoverflow.com/questions/19239449/how-do-i-reverse-an-array-in-go
+			
+			for _, msg := range allMsgs {
+				attachments := ""
+				if len(msg.Attachments) != 0 && conf.DownloadMedia {
+					for _, attach := range msg.Attachments {
+						fmt.Printf("%#v", attach)
+						attachments += fmt.Sprintf(`"%v",`, attach.Url)
+						// attach. TODO: download media
+						// TODO: check if media is NSFW
+					}
+					attachments = attachments[:len(attachments)-1]
+				}
+
+				switch conf.ExportType {
+					case config.EXPORT_TYPE_TEXT:
+						file.WriteString(tools.ParseTemplate(conf.ExportTextFormat, map[string]string{
+							"AUTHOR_NAME": msg.Author.Name,
+							"AUTHOR_ID": msg.Author.ID,
+							"TIMESTAMP": fmt.Sprint(msg.Timestamp),
+							"WAS_EDITED": fmt.Sprint(msg.IsEdited),
+							"CONTENT": msg.Content,
+							"HAS_ATTACHMENT": fmt.Sprint(len(msg.Attachments) != 0),
+							"ATTACHMENT_URL": attachments,
+							// "IS_REPLY": fmt.Sprint(msg), //TODO: FIND THE IS REPLY THING
+							// "IS_STICKER": msg, //TODO: Find sticker info
+							// "STICKER_IDS": msg, // TODO: Find sticker info
+						}))
+					case config.EXPORT_TYPE_HTML:
+						// use file.WriteString() w/ html content, and before & after the downlaoding just write prefix & suffix of html content, ez dub
+					case config.EXPORT_TYPE_JSON:
+						// ParsedMessages[channel].
+
+				}
+			}
+			if fin {
 				break
 			}
-			beforeStr := ""
-			if len(messages) != 0 {
-				beforeStr = fmt.Sprintf("&before=%v", messages[len(messages)-1].ID)
-			}
-			resp := []byte{}
-			err := conf.discordFetch(fmt.Sprintf("/channels/%v/messages?limit=50%v", channel, beforeStr), &resp)
-			tools.PanicIfErr(err)
-			fmt.Println(string(resp))
-			// parsed := []Message{}
-			// json.Unmarshal(resp, &parsed)
-			// messages = append(messages, parsed...)
-			// done = true
 		}
 	}
 	gotten, err := json.Marshal(ParsedMessages)
@@ -171,4 +220,18 @@ func (conf ConfigType) FetchMain() {
 	tools.PanicIfErr(err)
 	defer file.Close()
 	file.Write(gotten)
+}
+
+
+
+func (conf ConfigType) FetchChannelMessages(channel string, before string, limit int) []Message {
+	if len(before) != 0 {
+		before = "&before=" + before
+	}
+	resp := []byte{}
+	err := conf.discordFetch(fmt.Sprintf("/channels/%v/messages?limit=%v%v", channel, limit, before), &resp)
+	tools.PanicIfErr(err)
+	allMsgs := []Message{}
+	json.Unmarshal(resp, &allMsgs)
+	return allMsgs
 }

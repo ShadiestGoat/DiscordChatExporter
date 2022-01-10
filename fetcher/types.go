@@ -60,6 +60,7 @@ type Attachment struct {
 	Width int `json:"width"`
 	Height int `json:"height"`
 	ContentType string `json:"content_type"`
+	// TODO: NSWF/Spoiler, etc!
 }
 
 type EmbedType int8

@@ -35,5 +35,6 @@ type Config struct {
 	ExportJsonMeta bool
 	ExportTextFormat string
 	IgnoreNsfw bool
+	UseLimit50 bool
 	Filter MsgFilter
 }
