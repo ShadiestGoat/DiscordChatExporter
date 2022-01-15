@@ -19,9 +19,7 @@ func Load() Config {
 	ignoreEnv := false
 	if len(gottenIgnore) != 0 {
 		parsedIgnore, err := ParseBool(gottenIgnore)
-		if err != nil {
-			panic(err)
-		}
+		tools.PanicIfErr(err)
 		ignoreEnv = parsedIgnore
 	}
 	envFileName := os.Getenv("ENV_FILENAME")
@@ -87,9 +85,7 @@ func Load() Config {
 	envDwMedia := os.Getenv("DOWNLOAD_MEDIA")
 	if len(envDwMedia) != 0 {
 		parsedDwMedia, err := ParseBool(envDwMedia)
-		if err != nil {
-			panic(err)
-		}
+		tools.PanicIfErr(err)
 		config.DownloadMedia = parsedDwMedia
 	}
 
@@ -100,7 +96,7 @@ func Load() Config {
 			config.ExportType = EXPORT_TYPE_TEXT
 			envFormat := os.Getenv("EXPORT_PLAIN_FORMAT")
 			if len(envFormat) == 0 {
-				config.ExportTextFormat = `[{{$ID}}]: "{{$CONTENT}}"`
+				config.ExportTextFormat = `[{{%CHANNEL_ID}}]: "{{%CONTENT}}"`
 			} else {
 				config.ExportTextFormat = envFormat
 			}
@@ -111,14 +107,12 @@ func Load() Config {
 				config.ExportJsonMeta = true
 			} else {
 				parsedJsonMeta, err := ParseBool(envExportJson)
-				if err != nil {
-					panic(err)
-				}
+				tools.PanicIfErr(err)
 				config.ExportJsonMeta = parsedJsonMeta
 			}
 		case "HTML":
 			config.ExportType = EXPORT_TYPE_HTML
-			config.ExportHtmlThemeName = "black"
+			config.ExportHtmlThemeName = "dark"
 			envThemeName := os.Getenv("EXPORT_HTML_THEME")
 			if len(envThemeName) != 0 {
 				config.ExportHtmlThemeName = envThemeName
@@ -133,7 +127,7 @@ func Load() Config {
 
 	envExportLoc := os.Getenv("EXPORT_LOCATION")
 	if len(envExportLoc) == 0 {
-		envExportLoc = filepath.Join("output", "{{$ID}}")
+		envExportLoc = filepath.Join("output", "{{%CHANNEL_ID}}")
 	}
 	config.ExportLocation = envExportLoc
 
@@ -141,9 +135,7 @@ func Load() Config {
 
 	if len(envNumLimit) != 0 && envNumLimit != "all" {
 		parsedNum, err := strconv.ParseInt(envNumLimit, 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		tools.PanicIfErr(err)
 		config.Filter.NumMax = int(parsedNum)
 	} else {
 		config.Filter.NumMax = MAX_ID
@@ -164,18 +156,14 @@ func Load() Config {
 	parsedMaximum := 0
 	if len(envBeforeTime) != 0 {
 		parsedMax, err := strconv.ParseInt(envBeforeTime, 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		tools.PanicIfErr(err)
 		config.Filter.MaxTime = int(time.Unix(parsedMax, 0).UnixMicro())
 		parsedMaximum = int(parsedMax)
 	}
 	envAfterTime := os.Getenv("AFTER_TIME")
 	if len(envAfterTime) != 0 {
 		parsedMin, err := strconv.ParseInt(envAfterTime, 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		tools.PanicIfErr(err)
 		config.Filter.MaxTime = int(time.Unix(parsedMin, 0).UnixMicro())
 		if len(envBeforeTime) != 0 && parsedMaximum < int(parsedMin) {
 			panic("AFTER_TIME is after BEFORE_TIME")

@@ -1,0 +1,9 @@
+:root {
+    --background-primary: #36393F;
+    --background-darker: #32353b;
+    --background-lighter: #40444b;
+    --text-muted: #72767d;
+    --text-color: #dcddde;
+    --pfp-size: 5.5vh;
+    --reply-line-width: 2px;
+}

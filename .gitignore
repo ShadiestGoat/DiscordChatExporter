@@ -17,3 +17,5 @@
 .env
 
 DiscordChatExporter
+
+output/*

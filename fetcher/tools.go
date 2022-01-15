@@ -9,22 +9,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ShadiestGoat/DiscordChatExporter/discord"
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
 
-func (author Author) AvatarUrl() string {
-	return fmt.Sprintf("https://cdn.discordapp.com/avatars/376079696489742338/%v.webp?size=512", author.Avatar)
-}
-
 const BASE = "https://discordapp.com/api/v9"
-
-type SingleMessageSearch struct {
-	Msgs []Message `json:"messages"`
-}
 
 var ErrMsgNotFound = errors.New("msg not found")
 var Err404 = errors.New("404")
-var ErrBadAuth = errors.New("Error 401: Unauthorized! This means the token is bad")
+var ErrBadAuth = errors.New("error 401: unauthorized! this means the token is bad")
 
 type RateLimit struct {
 	RetryAfter float64 `json:"retry_after"`
@@ -69,7 +62,7 @@ func (conf ConfigType) discordFetch(uri string, respBody *[]byte) error {
 }
 
 
-func (conf ConfigType) FetchMsgId(channel string, id string) (Message, error) {
+func (conf ConfigType) FetchMsgId(channel string, id string) (discord.Message, error) {
 	resBody := []byte{}
 	err := conf.discordFetch(fmt.Sprintf("/channels/%v", channel), &resBody) // we don't actuall care about output so it's fine to use resBody
 	if errors.Is(err, Err404) {
@@ -78,12 +71,14 @@ func (conf ConfigType) FetchMsgId(channel string, id string) (Message, error) {
 		tools.PanicIfErr(err)
 	}
 
-	err = conf.discordFetch(fmt.Sprintf("/channels/%v/messages?around=%v&limit=1", channel, id), &resBody)
+	conf.discordFetch(fmt.Sprintf("/channels/%v/messages?around=%v&limit=1", channel, id), &resBody)
+	
 	if string(resBody) == "[]" {
-		return Message{}, ErrMsgNotFound
+		return discord.Message{}, ErrMsgNotFound
 	}
-	msgs := SingleMessageSearch{}
+
+	msgs := []discord.Message{}
 	err = json.Unmarshal(resBody, &msgs)
 	tools.PanicIfErr(err)
-	return msgs.Msgs[0], nil
+	return msgs[0], nil
 }
