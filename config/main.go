@@ -36,37 +36,39 @@ func Load() Config {
 
 	if len(envToken) == 0 {
 		panic("TOKEN is required!")
-	} else if envToken[:4] != "mfa." {
-		panic("TOKEN is not a user token!")
 	}
-	
+	err := VerifyToken(envToken)
+	if err != nil {
+		panic(err)
+	}
+
 	config.Token = envToken
 
 	IdType := os.Getenv("ID_TYPE")
 
 	switch IdType {
-		case "USER":
-			config.IdType = ID_TYPE_USER
-		case "CHANNEL":
+	case "USER":
+		config.IdType = ID_TYPE_USER
+	case "CHANNEL":
+		config.IdType = ID_TYPE_CHANNEL
+	case "GUILD":
+		config.IdType = ID_TYPE_GUILD
+		if len(os.Getenv("IGNORE_NSFW_CHANNEL")) != 0 {
+			ignore, err := ParseBool(os.Getenv("IGNORE_NSFW_CHANNEL"))
+			tools.PanicIfErr(err)
+			config.IgnoreNsfw = ignore
+		}
+	default:
+		if len(IdType) == 0 {
 			config.IdType = ID_TYPE_CHANNEL
-		case "GUILD":
-			config.IdType = ID_TYPE_GUILD
-			if len(os.Getenv("IGNORE_NSFW_CHANNEL")) != 0 {
-				ignore, err := ParseBool(os.Getenv("IGNORE_NSFW_CHANNEL"))
-				tools.PanicIfErr(err)
-				config.IgnoreNsfw = ignore
-			}
-		default:
-			if len(IdType) == 0 {
-				config.IdType = ID_TYPE_CHANNEL
-			} else {
-				panic("ID_TYPE must be one of the allowed values!")
-			}
+		} else {
+			panic("ID_TYPE must be one of the allowed values!")
+		}
 	}
 
 	idGotten := strings.Split(os.Getenv("ID"), " ")
 	ids := []string{}
-	
+
 	for _, ogId := range idGotten {
 		id, idOk := VerifySnowflake(ogId)
 		if !idOk {
@@ -92,37 +94,37 @@ func Load() Config {
 	exportTypeGotten := os.Getenv("EXPORT_TYPE")
 
 	switch exportTypeGotten {
-		case "TEXT":
-			config.ExportType = EXPORT_TYPE_TEXT
-			envFormat := os.Getenv("EXPORT_PLAIN_FORMAT")
-			if len(envFormat) == 0 {
-				config.ExportTextFormat = `[{{%CHANNEL_ID}}]: "{{%CONTENT}}"`
-			} else {
-				config.ExportTextFormat = envFormat
-			}
-		case "JSON":
-			config.ExportType = EXPORT_TYPE_JSON
-			envExportJson := os.Getenv("EXPORT_JSON_TOOLS")
-			if len(envExportJson) == 0 {
-				config.ExportJsonMeta = true
-			} else {
-				parsedJsonMeta, err := ParseBool(envExportJson)
-				tools.PanicIfErr(err)
-				config.ExportJsonMeta = parsedJsonMeta
-			}
-		case "HTML":
-			config.ExportType = EXPORT_TYPE_HTML
-			config.ExportHtmlThemeName = "dark"
-			envThemeName := os.Getenv("EXPORT_HTML_THEME")
-			if len(envThemeName) != 0 {
-				config.ExportHtmlThemeName = envThemeName
-			}
-		default:
-			if len(exportTypeGotten) == 0 {
-				config.IdType = ID_TYPE_CHANNEL
-			} else {
-				panic("EXPORT_TYPE must be one of the allowed values!")
-			}
+	case "TEXT":
+		config.ExportType = EXPORT_TYPE_TEXT
+		envFormat := os.Getenv("EXPORT_PLAIN_FORMAT")
+		if len(envFormat) == 0 {
+			config.ExportTextFormat = `[{{%CHANNEL_ID}}]: "{{%CONTENT}}"`
+		} else {
+			config.ExportTextFormat = envFormat
+		}
+	case "JSON":
+		config.ExportType = EXPORT_TYPE_JSON
+		envExportJson := os.Getenv("EXPORT_JSON_TOOLS")
+		if len(envExportJson) == 0 {
+			config.ExportJsonMeta = true
+		} else {
+			parsedJsonMeta, err := ParseBool(envExportJson)
+			tools.PanicIfErr(err)
+			config.ExportJsonMeta = parsedJsonMeta
+		}
+	case "HTML":
+		config.ExportType = EXPORT_TYPE_HTML
+		config.ExportHtmlThemeName = "dark"
+		envThemeName := os.Getenv("EXPORT_HTML_THEME")
+		if len(envThemeName) != 0 {
+			config.ExportHtmlThemeName = envThemeName
+		}
+	default:
+		if len(exportTypeGotten) == 0 {
+			config.IdType = ID_TYPE_CHANNEL
+		} else {
+			panic("EXPORT_TYPE must be one of the allowed values!")
+		}
 	}
 
 	envExportLoc := os.Getenv("EXPORT_LOCATION")
