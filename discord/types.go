@@ -6,6 +6,7 @@ const (
 	EMBED_LINK = iota
 	EMBED_GIF
 	EMBED_IGNORE
+	EMBED_IMAGE
 )
 
 type Embed struct {
@@ -14,6 +15,7 @@ type Embed struct {
 	Title string
 	Description string
 	Color string
+	Thumbnail EmbedImageThumbnail
 }
 
 type EmbedVideo struct {
@@ -24,14 +26,27 @@ type MsgType int8
 
 const (
 	MESSAGE_TYPE_NORMAL MsgType = iota
-
+	// TODO: This sems to be wrong, i think some types got rmed??
 )
 
-type RawMessage struct {
+type EmbedImageThumbnail struct {
+	Width int
+	Height int
+}
+
+type Sticker struct {
+	ID string `json:"id"`
+}
+
+type ReplyMsg struct {
 	ID string `json:"id"`
 	Content string `json:"content"`
-	Channel string `json:"channel_id"`
 	Author Author `json:"author"`
+}
+
+type Message struct {
+	ReplyMsg
+	Channel string `json:"channel_id"`
 	Attachments []Attachment `json:"attachments"`
 	Embeds []Embed `json:"embeds"`
 	Mentions []Author `json:"mentions"`
@@ -39,13 +54,11 @@ type RawMessage struct {
 	MentionsEveryone bool `json:"mention_everyone"`
 	Timestamp int `json:"timestamp"`
 	Type MsgType `json:"type"`
+	Stickers []Sticker `json:"sticker_items"`
 	IsEdited bool
 	IsReply bool
-}
-
-type Message struct {
-	RawMessage
-	ReplyTo RawMessage
+	IsSticker bool
+	ReplyTo ReplyMsg
 }
 
 

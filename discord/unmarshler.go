@@ -16,8 +16,6 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-
-
 	for key, value := range s {
 		switch key {
 			case "id":
@@ -99,14 +97,16 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 				msg.IsEdited = string(value) != "null"
 			case "referenced_message":
 				msg.IsReply = true
-				// msg.ReplyTo = 
-				parsed := Message{}
-				
+				parsed := ReplyMsg{}
 				err := json.Unmarshal(value, &parsed)
 				tools.PanicIfErr(err)
-
-				// msg.['']
-
+				msg.ReplyMsg = parsed
+			case "sticker_items":
+				msg.IsSticker = true
+				parsed := []Sticker{}
+				err := json.Unmarshal(value, &parsed)
+				tools.PanicIfErr(err)
+				msg.Stickers = parsed
 		}
 	}
 
@@ -152,6 +152,8 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 			embed.Type = EMBED_GIF
 		case "link", "rich":
 			embed.Type = EMBED_LINK
+		case "image":
+			embed.Type = EMBED_IMAGE
 		default:
 			embed.Type = EMBED_IGNORE
 	}
@@ -163,6 +165,7 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 				if embed.Type == EMBED_GIF {
 					continue
 				}
+				
 				parsed := ""
 				
 				err = json.Unmarshal(value, &parsed)
@@ -195,6 +198,16 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 				tools.PanicIfErr(err)
 
 				embed.Url = parsed.Url
+			case "thumbnail":
+				if embed.Type != EMBED_IMAGE {
+					continue
+				}
+				parsed := EmbedImageThumbnail{}
+				
+				err = json.Unmarshal(value, &parsed)
+				tools.PanicIfErr(err)
+
+				embed.Thumbnail = parsed
 		}
 	}
 	return nil

@@ -3,6 +3,9 @@ package components
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
+	"strings"
+
 	// "io/ioutil"
 	"os"
 	"path/filepath"
@@ -62,14 +65,16 @@ func (theme *Theme) LoadTheme(themeName string) {
 	theme.HTML_HEAD = theme.parseComponent("htmlHead")
 	theme.TOP_BAR = theme.parseComponent("topBar")
 	theme.START_DM = theme.parseComponent("startDm")
+	theme.IMG = theme.parseComponent("img")
 }
 
 var newLineReg = regexp.MustCompile(`\n`)
 var extraWhitespaceReg = regexp.MustCompile(`\s{2,}`)
 var tabReg = regexp.MustCompile(`\t`)
 
-const IMG = ``
-
+func rmQuery(urlRaw string) string {
+	return strings.Split(urlRaw, "?")[0]
+}
 
 func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Message, firstMsg bool) string {
 	content := msg.Content
@@ -79,10 +84,10 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 
 	for _, attach := range msg.Attachments {
 		if attach.ContentType[:5] == "image" {
-			attachContent += tools.ParseTemplate(IMG, map[string]string{
-				"IMG_URL": attach.Url,
-				"WIDTH": fmt.Sprint(0.8*float64(attach.Width)),
-				"HEIGHT": fmt.Sprint(0.8*float64(attach.Height)),
+			attachContent += tools.ParseTemplate(theme.IMG, map[string]string{
+				"IMG_URL": rmQuery(attach.Url),
+				"WIDTH": fmt.Sprint(math.Floor(0.8*float64(attach.Width))),
+				"HEIGHT": fmt.Sprint(math.Floor(0.8*float64(attach.Height))),
 			})
 		} else {
 			panic(attach.ContentType)
@@ -91,7 +96,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 
 	if firstMsg {
 		return tools.ParseTemplate(theme.MSG_WITH_PFP, map[string]string{
-			"PFP": msg.Author.AvatarUrl(256),
+			"PFP": msg.Author.URL(256),
 			"USERNAME": msg.Author.Name,
 			"DATE": discord.TimestampToTime(msg.Timestamp).Format("Mon 02/01/2006 03:04:05 PM"),
 			"CONTENT": content,
@@ -142,6 +147,6 @@ func (theme Theme) TopBar(title string, channelType discord.ChannelType) string 
 func (theme Theme) StartDM(author discord.Author) string {
 	return tools.ParseTemplate(theme.START_DM, map[string]string{
 		"TITLE": author.Name,
-		"PFP": author.AvatarUrl(512),
+		"PFP": author.URL(512),
 	})
 }

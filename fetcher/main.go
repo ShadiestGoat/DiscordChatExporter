@@ -228,15 +228,43 @@ func (conf ConfigType) FetchMain() {
 			prevMsg := discord.Message{}
 
 			for _, msg := range allMsgs {
+				for _, embed := range msg.Embeds {
+					if embed.Type == discord.EMBED_IMAGE {
+						msg.Attachments = append(msg.Attachments, discord.Attachment{
+							ID: "",
+							Name: "",
+							Size: 0,
+							Url: embed.Url,
+							Width: embed.Thumbnail.Width,
+							Height: embed.Thumbnail.Height,
+							ContentType: "image/webp",
+						})
+						if msg.Content == embed.Url {
+							msg.Content = ""
+						}
+						fmt.Printf("%#v\n", msg.Attachments)
+					}
+				}
+
 				attachments := ""
 				if len(msg.Attachments) != 0 && conf.DownloadMedia {
 					for _, attach := range msg.Attachments {
-						fmt.Printf("%#v", attach)
 						attachments += fmt.Sprintf(`"%v",`, attach.Url)
 						// attach. TODO: download media
 					}
 					attachments = attachments[:len(attachments)-1]
 				}
+				stickers := ""
+				if len(msg.Stickers) != 0 && conf.DownloadMedia {
+					for _, sticker := range msg.Stickers {
+						stickers += fmt.Sprintf(`"%v",`, sticker.ID)
+						// attach. TODO: download stickers as media (STICKER_ID)
+					}
+					stickers = stickers[:len(stickers)-1]
+				}
+
+				// TODO: Downlaod embed images as well!
+				// TODO: First interpret all image embeds as an attachment!
 
 				switch conf.ExportType {
 					case config.EXPORT_TYPE_TEXT:
@@ -249,8 +277,8 @@ func (conf ConfigType) FetchMain() {
 							"HAS_ATTACHMENT": fmt.Sprint(len(msg.Attachments) != 0),
 							"ATTACHMENT_URL": attachments,
 							"IS_REPLY": fmt.Sprint(msg.IsReply),
-							// "IS_STICKER": msg, //TODO: Find sticker info
-							// "STICKER_IDS": msg, // TODO: Find sticker info
+							"IS_STICKER": fmt.Sprint(msg.IsSticker),
+							"STICKER_IDS": stickers,
 						}))
 					case config.EXPORT_TYPE_HTML:
 						msgTimestamp := discord.TimestampToTime(msg.Timestamp)
@@ -258,6 +286,10 @@ func (conf ConfigType) FetchMain() {
 
 						if !sameDate {
 							file.WriteString(theme.DateSeperator(msgTimestamp))
+						}
+						
+						if len(msg.Attachments) != 0 {
+							fmt.Printf("%#v\n", msg.Attachments)
 						}
 
 						file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply))
