@@ -44,8 +44,6 @@ func Load() Config {
 
 	if len(envToken) == 0 {
 		panic("TOKEN is required!")
-	} else if envToken[:4] != "mfa." {
-		panic("TOKEN is not a user token!")
 	}
 	
 	config.Token = envToken
