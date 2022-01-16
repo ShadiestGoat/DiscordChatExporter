@@ -37,4 +37,5 @@ type Config struct {
 	IgnoreNsfw bool
 	UseLimit50 bool
 	Filter MsgFilter
+	UserAgent string
 }

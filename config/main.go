@@ -32,6 +32,14 @@ func Load() Config {
 
 	config := Config{}
 
+	envAgent := os.Getenv("USER_AGENT")
+	
+	if len(envAgent) == 0 {
+		envAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9003 Chrome/91.0.4472.164 Electron/13.4.0 Safari/537.36"
+	}
+
+	config.UserAgent = envAgent
+
 	envToken := os.Getenv("TOKEN")
 
 	if len(envToken) == 0 {

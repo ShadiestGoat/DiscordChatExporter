@@ -26,7 +26,8 @@ type RateLimit struct {
 func (conf ConfigType) discordRequest(method string, uri string, body io.Reader, respBody *[]byte) error {
 	req, err := http.NewRequest(method, fmt.Sprintf("%v%v", BASE, uri), body)
 	tools.PanicIfErr(err)
-	req.Header.Set("authorization", conf.Token)
+	req.Header.Set("Authorization", conf.Token)
+	req.Header.Set("User-Agent", conf.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
 	client := http.Client{
 		Timeout: time.Second * 20,

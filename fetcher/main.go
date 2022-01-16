@@ -36,7 +36,6 @@ func (conf ConfigType) checkToken() {
 	fmt.Printf("Token is valid! Logged in as %v#%v!\n", user.Name, user.Discriminator)
 }
 
-
 func (conf ConfigType) FetchMain() {
 	conf.checkToken()
 
