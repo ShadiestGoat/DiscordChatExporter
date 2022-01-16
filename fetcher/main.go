@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -194,6 +195,34 @@ func (conf ConfigType) FetchMain() {
 			tools.PanicIfErr(err)
 			err = tools.CopyFile(filepath.Join(theme.ThemeDir, "css", "style.css"), filepath.Join(outputDir, "style.css"))
 			tools.PanicIfErr(err)
+			
+			err = os.Mkdir(filepath.Join(outputDir, "assets"), 0755)
+			if os.IsExist(err) {
+
+			} else {
+				tools.PanicIfErr(err)
+			}
+
+			assetsBase, err := ioutil.ReadDir(filepath.Join(theme.BaseCss, "assets"))
+			
+			if os.IsNotExist(err) {} else {tools.PanicIfErr(err)}
+
+			for _, asset := range assetsBase {
+				name := asset.Name()
+				err = tools.CopyFile(filepath.Join(theme.BaseCss, "assets", name), filepath.Join(outputDir, "assets", name))
+				tools.PanicIfErr(err)
+			}
+
+			assetsTheme, err := ioutil.ReadDir(filepath.Join(theme.ThemeDir, "assets"))
+			
+			if os.IsNotExist(err) {} else {tools.PanicIfErr(err)}
+
+			for _, asset := range assetsTheme {
+				if asset.IsDir() {panic("The theme has dir assets. This is dis-allowed.")}
+				name := asset.Name()
+				err = tools.CopyFile(filepath.Join(theme.ThemeDir, "assets", name), filepath.Join(outputDir, "assets", name))
+				tools.PanicIfErr(err)
+			}
 
 			resp := []byte{}
 			conf.discordFetch(`/channels/` + channel, &resp)

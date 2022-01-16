@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"strings"
-
-	// "io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -66,15 +63,13 @@ func (theme *Theme) LoadTheme(themeName string) {
 	theme.TOP_BAR = theme.parseComponent("topBar")
 	theme.START_DM = theme.parseComponent("startDm")
 	theme.IMG = theme.parseComponent("img")
+	theme.STICKER = theme.parseComponent("sticker")
+	theme.REPLY = theme.parseComponent("reply")
 }
 
 var newLineReg = regexp.MustCompile(`\n`)
 var extraWhitespaceReg = regexp.MustCompile(`\s{2,}`)
 var tabReg = regexp.MustCompile(`\t`)
-
-func rmQuery(urlRaw string) string {
-	return strings.Split(urlRaw, "?")[0]
-}
 
 func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Message, firstMsg bool) string {
 	content := msg.Content
@@ -85,7 +80,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 	for _, attach := range msg.Attachments {
 		if attach.ContentType[:5] == "image" {
 			attachContent += tools.ParseTemplate(theme.IMG, map[string]string{
-				"IMG_URL": rmQuery(attach.Url),
+				"IMG_URL": attach.Url,
 				"WIDTH": fmt.Sprint(math.Floor(0.8*float64(attach.Width))),
 				"HEIGHT": fmt.Sprint(math.Floor(0.8*float64(attach.Height))),
 			})
@@ -94,7 +89,24 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 		}
 	}
 
+	stickerContent := ""
+
+	for _, sticker := range msg.Stickers {
+		stickerContent += tools.ParseTemplate(theme.STICKER, map[string]string{
+			"IMG_URL": sticker.URL(160),
+		})
+	}
+
 	if firstMsg {
+		replyContent := ""
+		if msg.IsReply {
+			replyContent = tools.ParseTemplate(theme.REPLY, map[string]string{
+				"PFP": msg.ReplyTo.Author.URL(16),
+				"NAME": msg.ReplyTo.Author.Name,
+				"CONTENT": msg.ReplyTo.Content,
+			})
+		}
+
 		return tools.ParseTemplate(theme.MSG_WITH_PFP, map[string]string{
 			"PFP": msg.Author.URL(256),
 			"USERNAME": msg.Author.Name,
@@ -102,7 +114,8 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			"CONTENT": content,
 			"ATTACH_CONTENT": attachContent,
 			"ID": msg.ID,
-			"REPLY_CONTENT": "",
+			"REPLY_CONTENT": replyContent,
+			"STICKER_CONTENT": stickerContent,
 		})
 	} else {
 		return tools.ParseTemplate(theme.MSG, map[string]string{
@@ -110,6 +123,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			"CONTENT": content,
 			"ATTACH_CONTENT": attachContent,
 			"ID": msg.ID,
+			"STICKER_CONTENT": stickerContent,
 		})
 	}
 }

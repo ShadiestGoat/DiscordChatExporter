@@ -1,14 +1,15 @@
-<div class="msg" id="{{%ID}}">
+<div class="msg">
     {{%REPLY_CONTENT}}
-    <div class="row">
+    <div class="row" style="justify-content: flex-start;">
         <img class="pfp" src="{{%PFP}}">
         <div class="msg-content-wrapper">
             <div class="msg-info">
-                <h3 class="msg-username">{{%USERNAME}}</h3>
-                <span class="msg-date">{{%DATE}}</span>
+                <h3 class="msg-username sel">{{%USERNAME}}</h3>
+                <span class="msg-date sel">{{%DATE}}</span>
             </div>
-            <p class="msg-content">{{%CONTENT}}</p>
+            <p class="msg-content sel">{{%CONTENT}}</p>
         {{%ATTACH_CONTENT}}
+        {{%STICKER_CONTENT}}
         </div>
     </div>
 </div>

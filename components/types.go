@@ -14,5 +14,7 @@ type Theme struct {
 	HTML_HEAD,
 	TOP_BAR,
 	START_DM,
+	REPLY,
+	STICKER,
 	IMG string
 }
