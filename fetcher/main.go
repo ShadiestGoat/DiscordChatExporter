@@ -168,8 +168,14 @@ func (conf ConfigType) FetchMain() {
 
 		os.Mkdir(outputDir, 0755)
 
+		mediaDir := ""
+
 		if conf.DownloadMedia {
-			os.Mkdir(filepath.Join(outputDir, "media"), 0755)
+			mediaDir = filepath.Join(outputDir, "media")
+			err := os.Mkdir(mediaDir, 0755)
+			if !os.IsExist(err) && err != nil {
+				panic(err)
+			}
 		}
 
 		file, err := os.Create(filepath.Join(outputDir, "content"+ext))
@@ -236,6 +242,7 @@ func (conf ConfigType) FetchMain() {
 			err = json.Unmarshal(resp, &channelParsed)
 			tools.PanicIfErr(err)
 			curTitle := ""
+
 			switch channelParsed.Type {
 			case discord.CHANNEL_TYPE_DM:
 				curTitle = channelParsed.Recipients[0].Name
@@ -279,7 +286,6 @@ func (conf ConfigType) FetchMain() {
 						if msg.Content == embed.Url {
 							msg.Content = ""
 						}
-						fmt.Printf("%#v\n", msg.Attachments)
 					}
 				}
 
@@ -287,25 +293,24 @@ func (conf ConfigType) FetchMain() {
 				if len(msg.Attachments) != 0 && conf.DownloadMedia {
 					for _, attach := range msg.Attachments {
 						attachments += fmt.Sprintf(`"%v",`, attach.Url)
-						// attach. TODO: download media
+						DownloadMedia(mediaDir, attach.Url, attach.Name)
 					}
 					attachments = attachments[:len(attachments)-1]
 				}
+
 				stickers := ""
+
 				if len(msg.Stickers) != 0 && conf.DownloadMedia {
 					for _, sticker := range msg.Stickers {
 						stickers += fmt.Sprintf(`"%v",`, sticker.ID)
-						// attach. TODO: download stickers as media (STICKER_ID)
+						DownloadMedia(mediaDir, sticker.URL(512), "STICKER_" + sticker.ID)
 					}
 					stickers = stickers[:len(stickers)-1]
 				}
 
-				// TODO: Downlaod embed images as well!
-				// TODO: First interpret all image embeds as an attachment!
-
 				switch conf.ExportType {
 				case config.EXPORT_TYPE_TEXT:
-					file.WriteString(tools.ParseTemplate(conf.ExportTextFormat, map[string]string{
+					file.WriteString(tools.ParseTemplate(conf.ExportTextFormat+"\n", map[string]string{
 						"AUTHOR_NAME":    msg.Author.Name,
 						"AUTHOR_ID":      msg.Author.ID,
 						"TIMESTAMP":      fmt.Sprint(msg.Timestamp),

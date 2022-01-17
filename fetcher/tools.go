@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ShadiestGoat/DiscordChatExporter/discord"
@@ -21,6 +23,21 @@ var ErrBadAuth = errors.New("error 401: unauthorized! this means the token is ba
 
 type RateLimit struct {
 	RetryAfter float64 `json:"retry_after"`
+}
+
+func DownloadMedia(mediaDir string, url string, name string) {
+	resp, err := http.Get(url)
+	tools.PanicIfErr(err)
+
+	file, err := os.Create(filepath.Join(mediaDir, name))
+	tools.PanicIfErr(err)
+
+	dwMedia, err := ioutil.ReadAll(resp.Body)
+	tools.PanicIfErr(err)
+
+	defer file.Close()
+
+	file.Write(dwMedia)
 }
 
 func (conf ConfigType) discordRequest(method string, uri string, body io.Reader, respBody *[]byte) error {
