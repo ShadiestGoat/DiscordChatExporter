@@ -18,7 +18,6 @@ import (
 
 type ConfigType config.Config
 
-
 type NewDMChannelResp struct {
 	Id string `json:"id"`
 }
@@ -41,7 +40,7 @@ func (conf ConfigType) FetchMain() {
 
 	ParsedMessages := map[string]JSONMetaData{}
 	NumLeft := conf.Filter.NumMax
-	
+
 	maxTime := conf.Filter.MaxTime
 	minTime := conf.Filter.MinTime
 	maxMsg := discord.Message{}
@@ -50,75 +49,75 @@ func (conf ConfigType) FetchMain() {
 	ext := "."
 
 	switch conf.ExportType {
-		case config.EXPORT_TYPE_HTML:
-			ext += "html"
-		case config.EXPORT_TYPE_JSON:
-			ext += "json"
-		case config.EXPORT_TYPE_TEXT:
-			ext += "log"
-		default:
-			panic("Default case achieved, unknown export type!")
+	case config.EXPORT_TYPE_HTML:
+		ext += "html"
+	case config.EXPORT_TYPE_JSON:
+		ext += "json"
+	case config.EXPORT_TYPE_TEXT:
+		ext += "log"
+	default:
+		panic("Default case achieved, unknown export type!")
 	}
 
 	switch conf.IdType {
-		case config.ID_TYPE_CHANNEL:
-		case config.ID_TYPE_GUILD:
-			parsedGuilds := map[string]bool{}
+	case config.ID_TYPE_CHANNEL:
+	case config.ID_TYPE_GUILD:
+		parsedGuilds := map[string]bool{}
 
-			for _, id := range conf.Ids {
-				if _, ok := parsedGuilds[id]; ok {
-					continue
-				}
-				parsedGuilds[id] = true
+		for _, id := range conf.Ids {
+			if _, ok := parsedGuilds[id]; ok {
+				continue
 			}
+			parsedGuilds[id] = true
+		}
 
-			conf.Ids = []string{}
-			for _, guildId := range parsedGuilds {
-				resp := []byte{}
-				err := conf.discordFetch(fmt.Sprintf("/guilds/%v/channels", guildId), &resp)
-				if errors.Is(err, Err404) {
-					fmt.Printf("Warning! %v is not a guild id! Ignoring...", guildId)
-					continue
-				} else {
-					tools.PanicIfErr(err)
-				}
-				allChannels := []discord.Channel{}
-				json.Unmarshal(resp, &allChannels)
-				chanIds := []string{}
-				for _, channel := range allChannels {
-					switch channel.Type {
-						case 	discord.CHANNEL_TYPE_GUILD_CATEGORY, 
-								discord.CHANNEL_TYPE_GUILD_STAGE_VOICE, 
-								discord.CHANNEL_TYPE_GUILD_STORE, 
-								discord.CHANNEL_TYPE_GUILD_VOICE:
-							 	continue
-					}
-					if channel.Nsfw && conf.IgnoreNsfw {
-						continue
-					}
-					chanIds = append(chanIds, channel.Id)
-				}
-				conf.Ids = append(conf.Ids, chanIds...)
-			}
-			
-		case config.ID_TYPE_USER:
-			newIds := []string{}
-			for _, id := range conf.Ids {
-				resBody := []byte{}
-				err := conf.discordRequest(http.MethodPost, "/users/@me/channels", strings.NewReader(fmt.Sprintf(`{"recipient_id":"%v"}`, id)),&resBody)
-				if errors.Is(err, Err404) {
-					fmt.Printf("Warning! %v is either not a user, or a dm cannot be opened with them. You have to manually get the id from them!\n", id)
-				} else {
-					tools.PanicIfErr(err)
-				}
-				resp := NewDMChannelResp{}
-				err = json.Unmarshal(resBody, &resp)
+		conf.Ids = []string{}
+		for _, guildId := range parsedGuilds {
+			resp := []byte{}
+			err := conf.discordFetch(fmt.Sprintf("/guilds/%v/channels", guildId), &resp)
+			if errors.Is(err, Err404) {
+				fmt.Printf("Warning! %v is not a guild id! Ignoring...", guildId)
+				continue
+			} else {
 				tools.PanicIfErr(err)
-				newIds = append(newIds, resp.Id)
 			}
-			conf.Ids = newIds
+			allChannels := []discord.Channel{}
+			json.Unmarshal(resp, &allChannels)
+			chanIds := []string{}
+			for _, channel := range allChannels {
+				switch channel.Type {
+				case discord.CHANNEL_TYPE_GUILD_CATEGORY,
+					discord.CHANNEL_TYPE_GUILD_STAGE_VOICE,
+					discord.CHANNEL_TYPE_GUILD_STORE,
+					discord.CHANNEL_TYPE_GUILD_VOICE:
+					continue
+				}
+				if channel.Nsfw && conf.IgnoreNsfw {
+					continue
+				}
+				chanIds = append(chanIds, channel.Id)
+			}
+			conf.Ids = append(conf.Ids, chanIds...)
+		}
+
+	case config.ID_TYPE_USER:
+		newIds := []string{}
+		for _, id := range conf.Ids {
+			resBody := []byte{}
+			err := conf.discordRequest(http.MethodPost, "/users/@me/channels", strings.NewReader(fmt.Sprintf(`{"recipient_id":"%v"}`, id)), &resBody)
+			if errors.Is(err, Err404) {
+				fmt.Printf("Warning! %v is either not a user, or a dm cannot be opened with them. You have to manually get the id from them!\n", id)
+			} else {
+				tools.PanicIfErr(err)
+			}
+			resp := NewDMChannelResp{}
+			err = json.Unmarshal(resBody, &resp)
+			tools.PanicIfErr(err)
+			newIds = append(newIds, resp.Id)
+		}
+		conf.Ids = newIds
 	}
-	
+
 	if len(conf.Ids) == 1 {
 		needChecking := 0
 		if conf.Filter.MaxId != "" {
@@ -173,8 +172,8 @@ func (conf ConfigType) FetchMain() {
 			os.Mkdir(filepath.Join(outputDir, "media"), 0755)
 		}
 
-		file, err := os.Create(filepath.Join(outputDir, "content" + ext))
-		
+		file, err := os.Create(filepath.Join(outputDir, "content"+ext))
+
 		tools.PanicIfErr(err)
 
 		defer file.Close()
@@ -185,7 +184,7 @@ func (conf ConfigType) FetchMain() {
 		if conf.UseLimit50 {
 			limit = 50
 		}
-		
+
 		theme := components.Theme{}
 
 		if conf.ExportType == config.EXPORT_TYPE_HTML {
@@ -194,7 +193,7 @@ func (conf ConfigType) FetchMain() {
 			tools.PanicIfErr(err)
 			err = tools.CopyFile(filepath.Join(theme.ThemeDir, "css", "style.css"), filepath.Join(outputDir, "style.css"))
 			tools.PanicIfErr(err)
-			
+
 			err = os.Mkdir(filepath.Join(outputDir, "assets"), 0755)
 			if os.IsExist(err) {
 
@@ -203,8 +202,11 @@ func (conf ConfigType) FetchMain() {
 			}
 
 			assetsBase, err := ioutil.ReadDir(filepath.Join(theme.BaseCss, "assets"))
-			
-			if os.IsNotExist(err) {} else {tools.PanicIfErr(err)}
+
+			if os.IsNotExist(err) {
+			} else {
+				tools.PanicIfErr(err)
+			}
 
 			for _, asset := range assetsBase {
 				name := asset.Name()
@@ -213,18 +215,23 @@ func (conf ConfigType) FetchMain() {
 			}
 
 			assetsTheme, err := ioutil.ReadDir(filepath.Join(theme.ThemeDir, "assets"))
-			
-			if os.IsNotExist(err) {} else {tools.PanicIfErr(err)}
+
+			if os.IsNotExist(err) {
+			} else {
+				tools.PanicIfErr(err)
+			}
 
 			for _, asset := range assetsTheme {
-				if asset.IsDir() {panic("The theme has dir assets. This is dis-allowed.")}
+				if asset.IsDir() {
+					panic("The theme has dir assets. This is dis-allowed.")
+				}
 				name := asset.Name()
 				err = tools.CopyFile(filepath.Join(theme.ThemeDir, "assets", name), filepath.Join(outputDir, "assets", name))
 				tools.PanicIfErr(err)
 			}
 
 			resp := []byte{}
-			conf.discordFetch(`/channels/` + channel, &resp)
+			conf.discordFetch(`/channels/`+channel, &resp)
 			channelParsed := discord.Channel{}
 			err = json.Unmarshal(resp, &channelParsed)
 			tools.PanicIfErr(err)
@@ -246,25 +253,27 @@ func (conf ConfigType) FetchMain() {
 		for {
 			fin := false
 			allMsgs := conf.FetchChannelMessages(channel, lastMsgId, limit)
-			
+
 			if len(allMsgs) != limit {
 				fin = true // don't break because you still need proccessing
 			}
 
-			for i, j := 0, len(allMsgs)-1; i < j; i, j = i+1, j-1 {allMsgs[i], allMsgs[j] = allMsgs[j], allMsgs[i]} //shameless stealing from so https://stackoverflow.com/questions/19239449/how-do-i-reverse-an-array-in-go
-			
+			for i, j := 0, len(allMsgs)-1; i < j; i, j = i+1, j-1 {
+				allMsgs[i], allMsgs[j] = allMsgs[j], allMsgs[i]
+			} //shameless stealing from so https://stackoverflow.com/questions/19239449/how-do-i-reverse-an-array-in-go
+
 			prevMsg := discord.Message{}
 
 			for _, msg := range allMsgs {
 				for _, embed := range msg.Embeds {
 					if embed.Type == discord.EMBED_IMAGE {
 						msg.Attachments = append(msg.Attachments, discord.Attachment{
-							ID: "",
-							Name: "",
-							Size: 0,
-							Url: embed.Url,
-							Width: embed.Thumbnail.Width,
-							Height: embed.Thumbnail.Height,
+							ID:          "",
+							Name:        "",
+							Size:        0,
+							Url:         embed.Url,
+							Width:       embed.Thumbnail.Width,
+							Height:      embed.Thumbnail.Height,
 							ContentType: "image/webp",
 						})
 						if msg.Content == embed.Url {
@@ -295,52 +304,52 @@ func (conf ConfigType) FetchMain() {
 				// TODO: First interpret all image embeds as an attachment!
 
 				switch conf.ExportType {
-					case config.EXPORT_TYPE_TEXT:
-						file.WriteString(tools.ParseTemplate(conf.ExportTextFormat, map[string]string{
-							"AUTHOR_NAME": msg.Author.Name,
-							"AUTHOR_ID": msg.Author.ID,
-							"TIMESTAMP": fmt.Sprint(msg.Timestamp),
-							"WAS_EDITED": fmt.Sprint(msg.IsEdited),
-							"CONTENT": msg.Content,
-							"HAS_ATTACHMENT": fmt.Sprint(len(msg.Attachments) != 0),
-							"ATTACHMENT_URL": attachments,
-							"IS_REPLY": fmt.Sprint(msg.IsReply),
-							"IS_STICKER": fmt.Sprint(msg.IsSticker),
-							"STICKER_IDS": stickers,
-						}))
-					case config.EXPORT_TYPE_HTML:
-						msgTimestamp := discord.TimestampToTime(msg.Timestamp)
-						sameDate := tools.SameDate(msgTimestamp, discord.TimestampToTime(prevMsg.Timestamp))
+				case config.EXPORT_TYPE_TEXT:
+					file.WriteString(tools.ParseTemplate(conf.ExportTextFormat, map[string]string{
+						"AUTHOR_NAME":    msg.Author.Name,
+						"AUTHOR_ID":      msg.Author.ID,
+						"TIMESTAMP":      fmt.Sprint(msg.Timestamp),
+						"WAS_EDITED":     fmt.Sprint(msg.IsEdited),
+						"CONTENT":        msg.Content,
+						"HAS_ATTACHMENT": fmt.Sprint(len(msg.Attachments) != 0),
+						"ATTACHMENT_URL": attachments,
+						"IS_REPLY":       fmt.Sprint(msg.IsReply),
+						"IS_STICKER":     fmt.Sprint(msg.IsSticker),
+						"STICKER_IDS":    stickers,
+					}))
+				case config.EXPORT_TYPE_HTML:
+					msgTimestamp := discord.TimestampToTime(msg.Timestamp)
+					sameDate := tools.SameDate(msgTimestamp, discord.TimestampToTime(prevMsg.Timestamp))
 
-						if !sameDate {
-							file.WriteString(theme.DateSeperator(msgTimestamp))
-						}
-						
-						if len(msg.Attachments) != 0 {
-							fmt.Printf("%#v\n", msg.Attachments)
-						}
+					if !sameDate {
+						file.WriteString(theme.DateSeperator(msgTimestamp))
+					}
 
-						file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply))
-						
-						prevMsg = msg
-						fin = true
+					if len(msg.Attachments) != 0 {
+						fmt.Printf("%#v\n", msg.Attachments)
+					}
 
-					case config.EXPORT_TYPE_JSON:
-						attachments := []JSONMetaAttachment{}
-						newChanInfo := ParsedMessages[channel]
-						for _, attach := range msg.Attachments {
-							attachments = append(attachments, JSONMetaAttachment{
-								Attachment: attach,
-								AuthorID: msg.Author.ID,
-							})
-							newChanInfo.AuthorAttachment[msg.Author.ID] = append(newChanInfo.AuthorAttachment[msg.Author.ID], ) //TODO: newChanInfo.length??? I have no clue honestly. Im so fucking tired
-						}
+					file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply))
 
-						// TODO: The rest of the things as well
-						newChanInfo.Attachments = append(ParsedMessages[channel].Attachments, attachments...)
-						newChanInfo.Msgs = append(newChanInfo.Msgs, msg)
-						
-						ParsedMessages[channel] = newChanInfo
+					prevMsg = msg
+					fin = true
+
+				case config.EXPORT_TYPE_JSON:
+					attachments := []JSONMetaAttachment{}
+					newChanInfo := ParsedMessages[channel]
+					for _, attach := range msg.Attachments {
+						attachments = append(attachments, JSONMetaAttachment{
+							Attachment: attach,
+							AuthorID:   msg.Author.ID,
+						})
+						newChanInfo.AuthorAttachment[msg.Author.ID] = append(newChanInfo.AuthorAttachment[msg.Author.ID]) //TODO: newChanInfo.length??? I have no clue honestly. Im so fucking tired
+					}
+
+					// TODO: The rest of the things as well
+					newChanInfo.Attachments = append(ParsedMessages[channel].Attachments, attachments...)
+					newChanInfo.Msgs = append(newChanInfo.Msgs, msg)
+
+					ParsedMessages[channel] = newChanInfo
 				}
 			}
 
@@ -348,21 +357,13 @@ func (conf ConfigType) FetchMain() {
 				break
 			}
 		}
-		
+
 		if conf.ExportType == config.EXPORT_TYPE_HTML {
 			file.WriteString(theme.MSG_INP_BAR)
 			file.WriteString(`</body></html>`)
 		}
 	}
-	// gotten, err := json.Marshal(ParsedMessages)
-	// tools.PanicIfErr(err)
-	// file, err := os.Create("gotten.json")
-	// tools.PanicIfErr(err)
-	// defer file.Close()
-	// file.Write(gotten)
 }
-
-
 
 func (conf ConfigType) FetchChannelMessages(channel string, before string, limit int) []discord.Message {
 	if len(before) != 0 {

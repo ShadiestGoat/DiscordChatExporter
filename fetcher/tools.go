@@ -62,7 +62,6 @@ func (conf ConfigType) discordFetch(uri string, respBody *[]byte) error {
 	return conf.discordRequest(http.MethodGet, uri, nil, respBody)
 }
 
-
 func (conf ConfigType) FetchMsgId(channel string, id string) (discord.Message, error) {
 	resBody := []byte{}
 	err := conf.discordFetch(fmt.Sprintf("/channels/%v", channel), &resBody) // we don't actuall care about output so it's fine to use resBody
@@ -73,7 +72,7 @@ func (conf ConfigType) FetchMsgId(channel string, id string) (discord.Message, e
 	}
 
 	conf.discordFetch(fmt.Sprintf("/channels/%v/messages?around=%v&limit=1", channel, id), &resBody)
-	
+
 	if string(resBody) == "[]" {
 		return discord.Message{}, ErrMsgNotFound
 	}
