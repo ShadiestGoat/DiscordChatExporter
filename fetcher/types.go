@@ -14,7 +14,3 @@ type JSONMetaAttachment struct {
 	discord.Attachment
 	AuthorID string
 }
-
-// type SingleMessageSearch struct {
-// 	Msgs []discord.Message `json:"messages"`
-// }

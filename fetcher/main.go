@@ -184,7 +184,6 @@ func (conf ConfigType) FetchMain() {
 
 		defer file.Close()
 
-		lastMsgId := ""
 		limit := 100
 
 		if conf.UseLimit50 {
@@ -257,19 +256,34 @@ func (conf ConfigType) FetchMain() {
 			} // TODO: Add other channel types
 		}
 
+		prevMsg := discord.Message{}
+
 		for {
 			fin := false
-			allMsgs := conf.FetchChannelMessages(channel, lastMsgId, limit)
 
+			msgQSuffix := "&after=" + prevMsg.ID
+			if len(prevMsg.ID) == 0 {
+				if minTime != 0 {
+					msgQSuffix += discord.TimestampToID(maxTime)
+				} else {
+					msgQSuffix = ""
+				}
+			}
+
+			resp := []byte{}
+			err := conf.discordFetch(fmt.Sprintf("/channels/%v/messages?limit=%v%v", channel, limit, msgQSuffix), &resp)
+			tools.PanicIfErr(err)
+			allMsgs := []discord.Message{}
+			json.Unmarshal(resp, &allMsgs)
+			
 			if len(allMsgs) != limit {
 				fin = true // don't break because you still need proccessing
 			}
 
+			//Thank you https://stackoverflow.com/questions/19239449/how-do-i-reverse-an-array-in-go
 			for i, j := 0, len(allMsgs)-1; i < j; i, j = i+1, j-1 {
 				allMsgs[i], allMsgs[j] = allMsgs[j], allMsgs[i]
-			} //shameless stealing from so https://stackoverflow.com/questions/19239449/how-do-i-reverse-an-array-in-go
-
-			prevMsg := discord.Message{}
+			}
 
 			for _, msg := range allMsgs {
 				for _, embed := range msg.Embeds {
@@ -368,16 +382,4 @@ func (conf ConfigType) FetchMain() {
 			file.WriteString(`</body></html>`)
 		}
 	}
-}
-
-func (conf ConfigType) FetchChannelMessages(channel string, before string, limit int) []discord.Message {
-	if len(before) != 0 {
-		before = "&before=" + before
-	}
-	resp := []byte{}
-	err := conf.discordFetch(fmt.Sprintf("/channels/%v/messages?limit=%v%v", channel, limit, before), &resp)
-	tools.PanicIfErr(err)
-	allMsgs := []discord.Message{}
-	json.Unmarshal(resp, &allMsgs)
-	return allMsgs
 }

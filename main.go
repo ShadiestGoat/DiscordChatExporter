@@ -9,4 +9,5 @@ func main() {
 	conf := config.Load()
 	fetchConf := fetcher.ConfigType(conf)
 	fetchConf.FetchMain()
+	
 }

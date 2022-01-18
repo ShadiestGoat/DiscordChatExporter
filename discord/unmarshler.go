@@ -4,11 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
-
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
-
 
 func (msg *Message) UnmarshalJSON(b []byte) error {
 	var s map[string]json.RawMessage
@@ -26,12 +23,7 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 
 				msg.ID = parsed
 
-				i, err := strconv.ParseInt(parsed, 10, 64)
-				tools.PanicIfErr(err)
-
-				timestamp := (i >> 22) + 1420070400000
-				
-				msg.Timestamp = int(time.Unix(0, timestamp*1000000).UnixMicro())
+				msg.Timestamp = IDToTimestamp(parsed)
 			case "content":
 				parsed := ""
 				

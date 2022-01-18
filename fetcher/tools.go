@@ -15,7 +15,8 @@ import (
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
 
-const BASE = "https://discordapp.com/api/v9"
+const DOMAIN = "discord.com"
+const API_BASE = "/api/v9"
 
 var ErrMsgNotFound = errors.New("msg not found")
 var Err404 = errors.New("404")
@@ -41,14 +42,32 @@ func DownloadMedia(mediaDir string, url string, name string) {
 }
 
 func (conf ConfigType) discordRequest(method string, uri string, body io.Reader, respBody *[]byte) error {
-	req, err := http.NewRequest(method, fmt.Sprintf("%v%v", BASE, uri), body)
+	req, err := http.NewRequest(method, "https://" + conf.HeadersMask.DomainPrefix + DOMAIN + API_BASE + uri, body)
 	tools.PanicIfErr(err)
 	req.Header.Set("Authorization", conf.Token)
-	req.Header.Set("User-Agent", conf.UserAgent)
+	req.Header.Set("User-Agent", conf.HeadersMask.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Authority", conf.HeadersMask.DomainPrefix + DOMAIN)
+	req.Header.Set("sec-fetch-dest", "empty")
+	req.Header.Set("Sec-Fetch-Mode", "cors")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
+	req.Header.Set("X-Discord-Locale", conf.HeadersMask.Locale)
+	req.Header.Set("X-Super-Properties", "TODO:")
+	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Set("Accept-Language", conf.HeadersMask.Locale)
+	// referer... I don't think you need it since its a more standard header..? Idk For the record its like this: https://canary.discord.com/channels/@me/CHANID
+	// Cookie.. idk TODO:
+	
+	for header, value := range req.Header {
+		fmt.Printf("%v: %v\n", header, value)
+	}
+
 	client := http.Client{
 		Timeout: time.Second * 20,
 	}
+	
 	res, err := client.Do(req)
 	tools.PanicIfErr(err)
 	resBody, err := ioutil.ReadAll(res.Body)

@@ -37,5 +37,30 @@ type Config struct {
 	IgnoreNsfw bool
 	UseLimit50 bool
 	Filter MsgFilter
-	UserAgent string
+	HeadersMask HeadersMask
 }
+
+type HeadersMask struct {
+	UseCanary bool
+	UserAgent string
+	Locale string
+	SuperProperties string
+	DomainPrefix string
+}
+
+type envOpt struct {
+	DefaultString string
+	DefaultBool bool
+	Type envType
+	PointBool *bool
+	PointString *string
+	NoDefault bool
+	Skip func(config Config) bool
+}
+
+type envType int8
+
+const (
+	ENV_TYPE_STRING envType = iota
+	ENV_TYPE_BOOL
+)
