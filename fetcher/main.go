@@ -36,6 +36,7 @@ func (conf ConfigType) checkToken() {
 }
 
 func (conf ConfigType) FetchMain() {
+	conf.GetCookie()
 	conf.checkToken()
 
 	ParsedMessages := map[string]JSONMetaData{}

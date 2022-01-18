@@ -4,14 +4,56 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 	"github.com/joho/godotenv"
 )
 
 const MAX_ID = 999999999999999999
+
+var localeReg = regexp.MustCompile(`.._..`)
+
+func parseMap(envMap map[string]envOpt, config *Config) {
+	for key, opts := range envMap {
+		val := os.Getenv(key)
+
+		if len(val) == 0 {
+			// no input
+			if opts.Skip != nil {
+				if opts.Skip(*config) {
+					continue
+				}
+			}
+
+			if opts.NoDefault {
+				panic(fmt.Sprintf("'%v' was not found, but is needed for startup! Check your env file!", key))
+			}
+			switch opts.Type {
+			case ENV_TYPE_BOOL:
+				*opts.PointBool = opts.DefaultBool
+			case ENV_TYPE_STRING:
+				*opts.PointString = opts.DefaultString
+			}
+		} else {
+			switch opts.Type {
+			case ENV_TYPE_BOOL:
+				parsedBoolP, err := ParseBool(val)
+				if err != nil {
+					// It only returns the bad bool error
+					panic(fmt.Sprintf("'%v' has incorrect syntax for a boolean type. Please confirm the syntax with the wiki!", key))
+				}
+				*opts.PointBool = parsedBoolP
+			case ENV_TYPE_STRING:
+				*opts.PointString = val
+			}
+		}
+	}
+}
 
 func Load() Config {
 	config := Config{}
@@ -43,12 +85,15 @@ func Load() Config {
 	maxTime := ""
 	minTime := ""
 
-	envMap := map[string]envOpt{
+	priorityMap := map[string]envOpt{
 		"HM_AUTO": {
 			DefaultBool: true,
 			Type: ENV_TYPE_BOOL,
 			PointBool: &doAuto,
 		},
+	}
+
+	envMap := map[string]envOpt{
 		"HM_USER_AGENT": {
 			Type: ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.UserAgent,
@@ -60,10 +105,6 @@ func Load() Config {
 		"USE_CANARY": {
 			Type: ENV_TYPE_BOOL,
 			PointBool: &config.HeadersMask.UseCanary,
-			Skip: func(config Config) bool {
-				return doAuto
-			},
-			NoDefault: true,
 		},
 		"HM_LOCALE": {
 			Type: ENV_TYPE_STRING,
@@ -159,34 +200,8 @@ func Load() Config {
 		},
 	}
 
-	for key, opts := range envMap {
-		val := os.Getenv(key)
-
-		if len(val) == 0 {
-			// no input
-			if opts.Skip(config) {
-				continue
-			}
-			if opts.NoDefault {
-				panic(fmt.Sprintf("%v was not found, but is needed for startup! Check your env file!", key))
-			}
-			switch opts.Type {
-			case ENV_TYPE_BOOL:
-				*opts.PointBool = opts.DefaultBool
-			case ENV_TYPE_STRING:
-				*opts.PointString = opts.DefaultString
-			}
-		} else {
-			switch opts.Type {
-			case ENV_TYPE_BOOL:
-				parsedBoolP, err := ParseBool(val)
-				tools.PanicIfErr(err)
-				*opts.PointBool = parsedBoolP
-			case ENV_TYPE_STRING:
-				*opts.PointString = val
-			}
-		}
-	}
+	parseMap(priorityMap, &config)
+	parseMap(envMap, &config)
 
 	switch idType {
 	case "USER":
@@ -253,8 +268,68 @@ func Load() Config {
 	}
 
 	if doAuto {
-		panic("Not implemented!")
-		// superInfo := fmt.Sprintf(`{"os":"Linux","browser":"Discord Client","release_channel":"canary","client_version":"0.0.132","os_version":"5.15.12-arch1-1","os_arch":"x64","system_locale":"en-US","window_manager":"i3,unknown","distro":"\"Arch Linux\"","client_build_number":111095,"client_event_source":null}`)
+		superPropsOS := ""
+		locale := ""
+
+		switch runtime.GOOS {
+		case "linux":
+			superPropsOS = "Linux"
+			locale = localeReg.FindString(os.Getenv("LANG"))
+			if len(locale) == 0 {
+				fmt.Println("Warning! Locale cannot be found! This *may* raise suspicion from discord!")
+			} else {
+				locale = locale[:2] + "-" + locale[3:]
+			}
+			
+		case "darwin":
+			superPropsOS = "Mac OS X"
+			locale = localeReg.FindString(os.Getenv("LANG"))
+			if len(locale) == 0 {
+				fmt.Println("Warning! Locale cannot be found! This *may* raise suspicion from discord!")
+			} else {
+				locale = locale[:2] + "-" + locale[3:]
+			}
+		case "windows":
+			superPropsOS = "Windows"
+		default:
+			panic("Auto header masking is not supported on your os!")
+		}
+
+		superPropsReleaseChannel := "stable"
+
+		if config.HeadersMask.UseCanary {
+			superPropsReleaseChannel = "canary"
+		}
+		
+		config.HeadersMask.Locale = locale
+
+		superInfo := ""
+
+		if runtime.GOOS == "linux" {
+			winMgr := os.Getenv("XDG_CURRENT_DESKTOP")
+			if len(winMgr) == 0 {
+				fmt.Println("Warning! Cannot find window manager!")
+			} else {
+				winMgr += ","
+			}
+
+			superInfo = fmt.Sprintf(
+				`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"TODO:","os_version":"TODO:","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"TODO:","client_build_number":TODO:,"client_event_source":null}`, 
+				superPropsReleaseChannel,
+				locale,
+				winMgr,
+				)
+		} else {
+			superInfo = fmt.Sprintf(
+				`{"os":"%v","browser":"Discord Client","release_channel":"%v","client_version":"TODO:","os_version":"TODO:","os_arch":"x64","system_locale":"TODO:","client_build_number":TODO:,"client_event_source":null}`,
+				superPropsOS,
+				superPropsReleaseChannel,
+			)
+		}
+
+
+		// panic("Not implemented! So far: " + superInfo)
+		fmt.Println(superInfo)
 		
 		// My props are these, but these need to be tested on mac & windows! 
 		
@@ -262,9 +337,6 @@ func Load() Config {
 		// {"os":"Mac OS X","browser":"Discord Client","release_channel":"stable","client_version":"0.0.264","os_version":"16.7.0","os_arch":"x64","system_locale":"en-US","client_build_number":110451,"client_event_source":null} this is a mac version
 		// {"os":"Windows","browser":"Discord Client","release_channel":"stable","client_version":"1.0.9003","os_version":"10.0.22000","os_arch":"x64","system_locale":"en-GB","client_build_number":110451,"client_event_source":null}
 		// client_version = \d+\.\d+\.\d+ in info dir :)
-		// if canary release_channel = canary, else its stable
-		// browser = Discord Client
-		// OSes = Linux, Windows, Mac OS X,
 		// os_version
 		// os_arch
 		// system_locale on win its Get-Culture | select -exp Name, on unix its just LANG os env var and then parse using .._.. and replace the _ w/ '-'

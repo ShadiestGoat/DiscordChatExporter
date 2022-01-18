@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"path/filepath"
 	"time"
@@ -21,6 +22,7 @@ const API_BASE = "/api/v9"
 var ErrMsgNotFound = errors.New("msg not found")
 var Err404 = errors.New("404")
 var ErrBadAuth = errors.New("error 401: unauthorized! this means the token is bad")
+var jar *cookiejar.Jar
 
 type RateLimit struct {
 	RetryAfter float64 `json:"retry_after"`
@@ -41,8 +43,27 @@ func DownloadMedia(mediaDir string, url string, name string) {
 	file.Write(dwMedia)
 }
 
+func (conf ConfigType) GetCookie() {
+	req, err := http.NewRequest("GET", "https://" + conf.HeadersMask.DomainPrefix + "discord.com", nil)
+	tools.PanicIfErr(err)
+	jarN, err := cookiejar.New(nil)
+	tools.PanicIfErr(err)
+	jar = jarN
+
+	req.Header.Set("User-Agent", conf.HeadersMask.UserAgent)
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Jar: jar,
+	}
+
+	_, err = client.Do(req)
+	tools.PanicIfErr(err)
+}
+
 func (conf ConfigType) discordRequest(method string, uri string, body io.Reader, respBody *[]byte) error {
-	req, err := http.NewRequest(method, "https://" + conf.HeadersMask.DomainPrefix + DOMAIN + API_BASE + uri, body)
+	urlBase := "https://" + conf.HeadersMask.DomainPrefix + DOMAIN
+	req, err := http.NewRequest(method, urlBase + API_BASE + uri, body)
 	tools.PanicIfErr(err)
 	req.Header.Set("Authorization", conf.Token)
 	req.Header.Set("User-Agent", conf.HeadersMask.UserAgent)
@@ -55,19 +76,14 @@ func (conf ConfigType) discordRequest(method string, uri string, body io.Reader,
 	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
 	req.Header.Set("X-Discord-Locale", conf.HeadersMask.Locale)
 	req.Header.Set("X-Super-Properties", "TODO:")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Set("Accept-Language", conf.HeadersMask.Locale)
 	// referer... I don't think you need it since its a more standard header..? Idk For the record its like this: https://canary.discord.com/channels/@me/CHANID
-	// Cookie.. idk TODO:
-	
-	for header, value := range req.Header {
-		fmt.Printf("%v: %v\n", header, value)
-	}
 
 	client := http.Client{
 		Timeout: time.Second * 20,
+		Jar: jar,
 	}
-	
+
 	res, err := client.Do(req)
 	tools.PanicIfErr(err)
 	resBody, err := ioutil.ReadAll(res.Body)
@@ -91,6 +107,7 @@ func (conf ConfigType) discordRequest(method string, uri string, body io.Reader,
 	}
 	tools.PanicIfErr(err)
 	*respBody = resBody
+
 	return nil
 }
 
