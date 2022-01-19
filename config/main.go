@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -17,6 +19,8 @@ import (
 const MAX_ID = 999999999999999999
 
 var localeReg = regexp.MustCompile(`.._..`)
+var versionReg = regexp.MustCompile(`\d+\.\d+\.\d+`)
+var quotesReg = regexp.MustCompile(`"`)
 
 func parseMap(envMap map[string]envOpt, config *Config) {
 	for key, opts := range envMap {
@@ -270,6 +274,8 @@ func Load() Config {
 	if doAuto {
 		superPropsOS := ""
 		locale := ""
+		discordPath, err := os.UserHomeDir()
+		tools.PanicIfErr(err)
 
 		switch runtime.GOOS {
 		case "linux":
@@ -280,7 +286,7 @@ func Load() Config {
 			} else {
 				locale = locale[:2] + "-" + locale[3:]
 			}
-			
+			discordPath += `/.config`
 		case "darwin":
 			superPropsOS = "Mac OS X"
 			locale = localeReg.FindString(os.Getenv("LANG"))
@@ -289,10 +295,70 @@ func Load() Config {
 			} else {
 				locale = locale[:2] + "-" + locale[3:]
 			}
+			discordPath += `/Library/Application Support`
 		case "windows":
 			superPropsOS = "Windows"
+			discordPath += `\AppData\Roaming`
+			
+			cmdLoc := exec.Command(`Get-Culture | select -exp Name`)
+			localeInp, err := cmdLoc.Output()
+			tools.PanicIfErr(err)
+			locale = string(localeInp)
+			panic(locale)
 		default:
 			panic("Auto header masking is not supported on your os!")
+		}
+
+		dExist := true
+		normalD, err := ioutil.ReadDir(filepath.Join(discordPath, "discord"))
+		
+		if os.IsNotExist(err) {
+			dExist = false
+		} else {
+			tools.PanicIfErr(err)
+		}
+
+		dCExist := true
+		normalCD, err := ioutil.ReadDir(filepath.Join(discordPath, "discordcanary"))
+		
+		if os.IsNotExist(err) {
+			dCExist = false
+		} else {
+			tools.PanicIfErr(err)
+		}
+
+		if dCExist && dExist && len(os.Getenv("USE_CANARY")) == 0 {
+			panic("Both canary and stable discord detected. We don't know which one to pull from, use 'USE_CANARY'!")
+		}
+
+		if dExist && !dCExist && config.HeadersMask.UseCanary && len(os.Getenv("USE_CANARY")) != 0 {
+			fmt.Println("Warning! Stable discord found but canary not found, and the preferance is for canary! We will be using false for USE_CANARY for this download")
+			config.HeadersMask.UseCanary = false
+		} else if !config.HeadersMask.UseCanary && dCExist && !dExist && len(os.Getenv("USE_CANARY")) != 0 {
+			fmt.Println("Warning! Canary discord found but stable not found, and the preferance is for stable! We will be using true for USE_CANARY for this download")
+			config.HeadersMask.UseCanary = true
+		}
+
+		if config.HeadersMask.UseCanary {
+			config.HeadersMask.DomainPrefix = "canary."
+		}
+
+		discordVersion := ""
+
+		discordFiles := normalD
+
+		if config.HeadersMask.UseCanary {
+			discordFiles = normalCD
+		}
+
+		for _, fileInfo := range discordFiles {
+			if !fileInfo.IsDir() {
+				continue
+			}
+			name := fileInfo.Name()
+			if versionReg.MatchString(name) {
+				discordVersion = name
+			}
 		}
 
 		superPropsReleaseChannel := "stable"
@@ -313,23 +379,41 @@ func Load() Config {
 				winMgr += ","
 			}
 
+			cmd := exec.Command("uname", "-r")
+			osVersion, err := cmd.Output()
+			tools.PanicIfErr(err)
+			
+			osInfo, err := ioutil.ReadFile("/etc/os-release")
+			tools.PanicIfErr(err)
+			distro := ""
+
+			for _, line := range strings.Split(string(osInfo), "\n") {
+				if line[:4] == "NAME" {
+					distro = line[5:]
+					distro = quotesReg.ReplaceAllString(distro, `\"`)
+				}
+			}
+			
 			superInfo = fmt.Sprintf(
-				`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"TODO:","os_version":"TODO:","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"TODO:","client_build_number":TODO:,"client_event_source":null}`, 
+				`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"%v","client_build_number":TODO:,"client_event_source":null}`, 
 				superPropsReleaseChannel,
+				discordVersion,
+				osVersion,
 				locale,
 				winMgr,
+				distro,
 				)
 		} else {
 			superInfo = fmt.Sprintf(
-				`{"os":"%v","browser":"Discord Client","release_channel":"%v","client_version":"TODO:","os_version":"TODO:","os_arch":"x64","system_locale":"TODO:","client_build_number":TODO:,"client_event_source":null}`,
+				`{"os":"%v","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"TODO:","os_arch":"x64","system_locale":"%v","client_build_number":TODO:,"client_event_source":null}`,
 				superPropsOS,
+				discordVersion,
 				superPropsReleaseChannel,
+				locale,
 			)
 		}
 
-
-		// panic("Not implemented! So far: " + superInfo)
-		fmt.Println(superInfo)
+		panic("Not implemented! So far: " + superInfo)		
 		
 		// My props are these, but these need to be tested on mac & windows! 
 		
