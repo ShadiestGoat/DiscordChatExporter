@@ -389,9 +389,13 @@ func Load() Config {
 			distro := ""
 
 			for _, line := range strings.Split(string(osInfo), "\n") {
+				if len(line) == 0 {
+					continue
+				}
 				if line[:4] == "NAME" {
 					distro = line[5:]
 					distro = quotesReg.ReplaceAllString(distro, `\"`)
+					break
 				}
 			}
 			
@@ -399,7 +403,7 @@ func Load() Config {
 				`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"%v","client_build_number":TODO:,"client_event_source":null}`, 
 				superPropsReleaseChannel,
 				discordVersion,
-				osVersion,
+				string(osVersion),
 				locale,
 				winMgr,
 				distro,
