@@ -46,6 +46,7 @@ type HeadersMask struct {
 	Locale string
 	SuperProperties string
 	DomainPrefix string
+	DiscordVersion string
 }
 
 type envOpt struct {
