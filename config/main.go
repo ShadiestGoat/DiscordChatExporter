@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -413,7 +414,9 @@ func Load() Config {
 			)
 		}
 
-		panic("Not implemented! So far: " + superInfo)		
+		config.HeadersMask.SuperProperties = base64.StdEncoding.EncodeToString([]byte(superInfo))
+	
+		panic("Not implemented! So far: " + config.HeadersMask.SuperProperties)		
 		
 		// My props are these, but these need to be tested on mac & windows! 
 		
