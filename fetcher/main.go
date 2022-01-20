@@ -345,10 +345,6 @@ func (conf ConfigType) FetchMain() {
 						file.WriteString(theme.DateSeperator(msgTimestamp))
 					}
 
-					if len(msg.Attachments) != 0 {
-						fmt.Printf("%#v\n", msg.Attachments)
-					}
-
 					file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply))
 
 					prevMsg = msg
