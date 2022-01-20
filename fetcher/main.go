@@ -310,7 +310,7 @@ func (conf ConfigType) FetchMain() {
 				if len(msg.Attachments) != 0 && conf.DownloadMedia {
 					for _, attach := range msg.Attachments {
 						attachments += fmt.Sprintf(`"%v",`, attach.Url)
-						DownloadMedia(mediaDir, attach.Url, attach.Name)
+						DownloadMedia(mediaDir, attach.Url, attach.ID)
 					}
 					attachments = attachments[:len(attachments)-1]
 				}

@@ -32,7 +32,7 @@ func DownloadMedia(mediaDir string, url string, name string) {
 	resp, err := http.Get(url)
 	tools.PanicIfErr(err)
 
-	file, err := os.Create(filepath.Join(mediaDir, name))
+	file, err := os.Create(filepath.Join(mediaDir, name)) // Will overwrite it no matter what, so embed image duplicates are fine :)
 	tools.PanicIfErr(err)
 
 	dwMedia, err := ioutil.ReadAll(resp.Body)
