@@ -16,6 +16,7 @@ type Theme struct {
 	START_DM,
 	REPLY,
 	STICKER,
+	GIF,
 	IMG string
 	DownloadMedia bool
 }

@@ -40,7 +40,6 @@ func (conf ConfigType) FetchMain() {
 	conf.checkToken()
 
 	ParsedMessages := map[string]JSONMetaData{}
-	NumLeft := conf.Filter.NumMax
 
 	maxTime := conf.Filter.MaxTime
 	minTime := conf.Filter.MinTime
@@ -150,20 +149,26 @@ func (conf ConfigType) FetchMain() {
 		}
 	}
 
-	if maxTime > maxMsg.Timestamp && maxMsg.Timestamp != 0 {
+	if (maxTime > maxMsg.Timestamp && maxMsg.Timestamp != 0) || (maxTime == 0 && maxMsg.Timestamp != 0) {
 		maxTime = maxMsg.Timestamp
 	}
 
-	if minTime < minMsg.Timestamp {
+	if (minTime < minMsg.Timestamp && maxMsg.Timestamp != 0 )|| (minTime == 0 && minMsg.Timestamp != 0) {
 		minTime = minMsg.Timestamp
 	}
 
+	if maxTime == 0 {
+		maxTime = 9999999999999999
+	}
+
 	for _, channel := range conf.Ids {
-		NumLeft = conf.Filter.NumMax
+		NumLeft := conf.Filter.NumMax
 
 		outputDir := tools.ParseTemplate(conf.ExportLocation, map[string]string{
 			"CHANNEL_ID": channel,
 		})
+
+		os.RemoveAll(outputDir)
 
 		os.Mkdir(outputDir, 0755)
 
@@ -255,26 +260,24 @@ func (conf ConfigType) FetchMain() {
 			} // TODO: Add other channel types
 		}
 
+		lastID := fmt.Sprint(discord.TimestampToID(minTime))
+
+		if len(lastID) == 0 {
+			lastID = "0"
+		}
+
 		prevMsg := discord.Message{}
 
 		for {
 			fin := false
-
-			msgQSuffix := "&after=" + prevMsg.ID
-			if len(prevMsg.ID) == 0 {
-				if minTime != 0 {
-					msgQSuffix += discord.TimestampToID(maxTime)
-				} else {
-					msgQSuffix = ""
-				}
-			}
-
 			resp := []byte{}
-			err := conf.discordFetch(fmt.Sprintf("/channels/%v/messages?limit=%v%v", channel, limit, msgQSuffix), &resp)
+			msgUrl := fmt.Sprintf("/channels/%v/messages?limit=%v&after=%v", channel, limit, lastID)
+			fmt.Println(msgUrl)
+			err := conf.discordFetch(msgUrl, &resp)
 			tools.PanicIfErr(err)
 			allMsgs := []discord.Message{}
 			json.Unmarshal(resp, &allMsgs)
-			
+
 			if len(allMsgs) != limit {
 				fin = true // don't break because you still need proccessing
 			}
@@ -284,10 +287,19 @@ func (conf ConfigType) FetchMain() {
 				allMsgs[i], allMsgs[j] = allMsgs[j], allMsgs[i]
 			}
 
+			lastID = allMsgs[len(allMsgs)-1].ID
+
 			for _, msg := range allMsgs {
 				if NumLeft == 0 {
+					fin = true
 					break
 				}
+
+				if msg.Timestamp > maxTime {
+					break
+				}
+				
+				// fmt.Println(msg.Content)
 
 				for _, embed := range msg.Embeds {
 					if embed.Type == discord.EMBED_IMAGE {
@@ -342,16 +354,10 @@ func (conf ConfigType) FetchMain() {
 				case config.EXPORT_TYPE_HTML:
 					msgTimestamp := discord.TimestampToTime(msg.Timestamp)
 					sameDate := tools.SameDate(msgTimestamp, discord.TimestampToTime(prevMsg.Timestamp))
-
 					if !sameDate {
 						file.WriteString(theme.DateSeperator(msgTimestamp))
 					}
-
 					file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply))
-
-					prevMsg = msg
-					fin = true
-
 				case config.EXPORT_TYPE_JSON:
 					newChanInfo := ParsedMessages[channel]
 					
@@ -364,15 +370,16 @@ func (conf ConfigType) FetchMain() {
 							Attachment: attachRaw,
 							AuthorID: msg.Author.ID,
 						}
-
+						
 						newChanInfo.AttachList = append(newChanInfo.AttachList, attachment)
 						newChanInfo.AttachIDToIndex[attachment.ID] = len(newChanInfo.AttachIDToIndex) - 1
 						newChanInfo.AttachByAuthor[msg.Author.ID] = append(newChanInfo.AttachByAuthor[msg.Author.ID], attachment.ID)
 					}
-
+					
 					ParsedMessages[channel] = newChanInfo
 				}
 				
+				prevMsg = msg
 				NumLeft--
 			}
 

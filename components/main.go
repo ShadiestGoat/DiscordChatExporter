@@ -65,6 +65,7 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	theme.IMG = theme.parseComponent("img")
 	theme.STICKER = theme.parseComponent("sticker")
 	theme.REPLY = theme.parseComponent("reply")
+	theme.GIF = theme.parseComponent("gifs")
 	theme.DownloadMedia = DW_MEDIA
 }
 
@@ -91,6 +92,21 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			})
 		} else {
 			panic(attach.ContentType)
+		}
+	}
+	
+	gifContents := ""
+
+	for _, embed := range msg.Embeds {
+		if embed.Type == discord.EMBED_GIF {
+			gifContents += tools.ParseTemplate(theme.GIF, map[string]string{
+				"VIDEO_URL": embed.Url,
+				"WIDTH": fmt.Sprint(float64(embed.Thumbnail.Width)*0.7),
+				"HEIGHT": fmt.Sprint(float64(embed.Thumbnail.Height)*0.7),
+			})
+			if msg.Content == embed.GifContentUrl {
+				content = ""
+			}
 		}
 	}
 
@@ -121,14 +137,16 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			"ID": msg.ID,
 			"REPLY_CONTENT": replyContent,
 			"STICKER_CONTENT": stickerContent,
+			"GIFS": gifContents,
 		})
 	} else {
 		return tools.ParseTemplate(theme.MSG, map[string]string{
-			"DATE": discord.TimestampToTime(msg.Timestamp).Format("15:04:05"),
+			"DATE": discord.TimestampToTime(msg.Timestamp).Format("15:04"),
 			"CONTENT": content,
 			"ATTACH_CONTENT": attachContent,
 			"ID": msg.ID,
 			"STICKER_CONTENT": stickerContent,
+			"GIFS": gifContents,
 		})
 	}
 }

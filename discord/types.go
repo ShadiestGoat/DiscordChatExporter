@@ -16,6 +16,7 @@ type Embed struct {
 	Description string
 	Color string
 	Thumbnail EmbedImageThumbnail
+	GifContentUrl string
 }
 
 type EmbedVideo struct {

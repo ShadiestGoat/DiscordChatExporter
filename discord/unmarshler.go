@@ -154,16 +154,17 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 		switch key {
 			case "type":
 			case "url":
-				if embed.Type == EMBED_GIF {
-					continue
-				}
 				
 				parsed := ""
 				
 				err = json.Unmarshal(value, &parsed)
 				tools.PanicIfErr(err)
-
-				embed.Url = parsed
+				
+				if embed.Type == EMBED_GIF {
+					embed.GifContentUrl = parsed
+				} else {
+					embed.Url = parsed
+				}
 			case "title":
 				parsed := ""
 				
@@ -191,9 +192,6 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 
 				embed.Url = parsed.Url
 			case "thumbnail":
-				if embed.Type != EMBED_IMAGE {
-					continue
-				}
 				parsed := EmbedImageThumbnail{}
 				
 				err = json.Unmarshal(value, &parsed)
