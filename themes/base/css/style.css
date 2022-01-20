@@ -8,6 +8,7 @@
     --pfp-size: 5.5vh;
     --reply-size: 24px;
     --reply-line-width: 2px;
+    --mediaish-margin-top: 5px;
     background-color: var(--background-primary);
 }
 
@@ -160,6 +161,7 @@ p, h1, h2, h3, h4, h5, h6 {
     max-height: 70vh;
     object-position: left;
     object-fit: contain;
+    margin-top: var(--mediaish-margin-top);
 }
 
 .sticker {
@@ -167,6 +169,11 @@ p, h1, h2, h3, h4, h5, h6 {
     height: 160px;
     object-fit: contain;
     cursor: pointer;
+    margin-top: var(--mediaish-margin-top);
+}
+
+.gif {
+    margin-top: var(--mediaish-margin-top);
 }
 
 .msg-tot-wrapper {
