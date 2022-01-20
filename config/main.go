@@ -13,8 +13,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const MAX_ID = 999999999999999999
-
 func parseMap(envMap map[string]envOpt, config *Config) {
 	for key, opts := range envMap {
 		val := os.Getenv(key)
@@ -143,15 +141,15 @@ func Load() Config {
 			DefaultString: "CHANNEL",
 			PointString: &idType,
 		},
-		"IGNORE_NSFW_CHANNEL": {
-			Type: ENV_TYPE_BOOL,
-			PointBool: &config.IgnoreNsfw,
-			DefaultBool: false,
-		},
 		"ID": {
 			Type: ENV_TYPE_STRING,
 			PointString: &ids,
 			NoDefault: true,
+		},
+		"IGNORE_NSFW_CHANNEL": {
+			Type: ENV_TYPE_BOOL,
+			PointBool: &config.IgnoreNsfw,
+			DefaultBool: false,
 		},
 		"DOWNLOAD_MEDIA": {
 			DefaultBool: true,
@@ -170,7 +168,7 @@ func Load() Config {
 		},
 		"EXPORT_PLAIN_FORMAT": {
 			Type: ENV_TYPE_STRING,
-			DefaultString: `[{{%CHANNEL_ID}}]: "{{%CONTENT}}"`,
+			DefaultString: `[{{%AUTHOR_NAME}}]: "{{%CONTENT}}"`,
 			PointString: &config.ExportTextFormat,
 		},
 		"EXPORT_HTML_THEME": {
@@ -250,6 +248,8 @@ func Load() Config {
 		config.ExportType = EXPORT_TYPE_TEXT
 	case "JSON":
 		config.ExportType = EXPORT_TYPE_JSON
+	default:
+		panic("This export type is not supported!")
 	}
 
 	if len(limNum) != 0 && limNum != "all" {
@@ -257,10 +257,10 @@ func Load() Config {
 		tools.PanicIfErr(err)
 		config.Filter.NumMax = int(parsedNum)
 	} else {
-		config.Filter.NumMax = MAX_ID
+		config.Filter.NumMax = -1
 	}
 
-	if config.Filter.NumMax < 1 {
+	if config.Filter.NumMax < 1 && config.Filter.NumMax != -1 {
 		panic("Number limit may not be below 1!")
 	}
 

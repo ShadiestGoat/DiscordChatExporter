@@ -94,7 +94,7 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 				tools.PanicIfErr(err)
 				msg.ReplyTo = parsed
 			case "sticker_items":
-				msg.IsSticker = true
+				msg.HasSticker = true
 				parsed := []Sticker{}
 				err := json.Unmarshal(value, &parsed)
 				tools.PanicIfErr(err)

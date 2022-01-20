@@ -159,9 +159,7 @@ func (conf ConfigType) FetchMain() {
 	}
 
 	for _, channel := range conf.Ids {
-		if NumLeft == 0 {
-			break
-		}
+		NumLeft = conf.Filter.NumMax
 
 		outputDir := tools.ParseTemplate(conf.ExportLocation, map[string]string{
 			"CHANNEL_ID": channel,
@@ -287,6 +285,10 @@ func (conf ConfigType) FetchMain() {
 			}
 
 			for _, msg := range allMsgs {
+				if NumLeft == 0 {
+					break
+				}
+
 				for _, embed := range msg.Embeds {
 					if embed.Type == discord.EMBED_IMAGE {
 						msg.Attachments = append(msg.Attachments, discord.Attachment{
@@ -334,7 +336,7 @@ func (conf ConfigType) FetchMain() {
 						"HAS_ATTACHMENT": fmt.Sprint(len(msg.Attachments) != 0),
 						"ATTACHMENT_URL": attachments,
 						"IS_REPLY":       fmt.Sprint(msg.IsReply),
-						"IS_STICKER":     fmt.Sprint(msg.IsSticker),
+						"HAS_STICKERS":   fmt.Sprint(msg.HasSticker),
 						"STICKER_IDS":    stickers,
 					}))
 				case config.EXPORT_TYPE_HTML:
@@ -367,6 +369,8 @@ func (conf ConfigType) FetchMain() {
 
 					ParsedMessages[channel] = newChanInfo
 				}
+				
+				NumLeft--
 			}
 
 			if fin {
