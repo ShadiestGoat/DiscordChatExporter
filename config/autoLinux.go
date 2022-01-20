@@ -76,5 +76,4 @@ func (mask *HeadersMask) Auto() {
 		mask.PullBuildId(),
 	)
 	mask.EncodeSuperProps()
-	panic(mask.SuperProperties)
 }
