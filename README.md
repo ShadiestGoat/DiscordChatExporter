@@ -17,7 +17,7 @@ This is a golang implemintation of a discord chat explorer i found a while back 
 
 ## Setup
 
-Please check the (wiki)[https://github.com/ShadiestGoat/DiscordChatExporter/wiki/Setup]
+Please check the [wiki](https://github.com/ShadiestGoat/DiscordChatExporter/wiki/Setup)
 
 ## Faq
 
