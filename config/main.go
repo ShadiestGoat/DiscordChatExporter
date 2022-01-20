@@ -272,15 +272,6 @@ func Load() Config {
 		}
 
 		config.HeadersMask.Auto()
-
-		panic("Not implemented!")
-
-		
-		// My props are these, but these need to be tested on mac & windows! 
-		
-		// {"os":"Linux","browser":"Discord Client","release_channel":"canary","client_version":"0.0.132","os_version":"5.15.12-arch1-1","os_arch":"x64","system_locale":"en-US","window_manager":"i3,unknown","distro":"\"Arch Linux\"","client_build_number":111095,"client_event_source":null}
-		// {"os":"Mac OS X","browser":"Discord Client","release_channel":"stable","client_version":"0.0.264","os_version":"16.7.0","os_arch":"x64","system_locale":"en-US","client_build_number":110451,"client_event_source":null} this is a mac version
-		// {"os":"Windows","browser":"Discord Client","release_channel":"stable","client_version":"1.0.9003","os_version":"10.0.22000","os_arch":"x64","system_locale":"en-GB","client_build_number":110451,"client_event_source":null}
 	}
 
 	if config.HeadersMask.UseCanary {

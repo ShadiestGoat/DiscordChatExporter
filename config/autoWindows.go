@@ -5,18 +5,23 @@ package config
 import (
 	"fmt"
 	"os/exec"
+	"os"
 
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 	"golang.org/x/sys/windows/registry"
 )
 
 func (mask *HeadersMask) Auto() {
-	cmdLoc := exec.Command("powershell", `Get-Culture | select -exp Name`)
+	cmdLoc := exec.Command("cmd", `Get-Culture | select -exp Name`)
 	localeInp, err := cmdLoc.Output()
 	tools.PanicIfErr(err)
 	mask.Locale = string(localeInp)
+	if len(mask.Locale) == 0 {
+		fmt.Println("Warning! Could not auto pull the locale! Please report this as an issue. Will be using a default of en-US")
+		mask.Locale = "en-US"
+	}
 
-	mask.PullDiscordVers("%APPDATA%")
+	mask.PullDiscordVers(os.Getenv("APPDATA"))
 	mask.UserAgent = fmt.Sprintf("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/%v Chrome/91.0.4472.164 Electron/13.4.0 Safari/537.36", mask.DiscordVersion)
 
 	releaseChan := "stable"
@@ -37,10 +42,11 @@ func (mask *HeadersMask) Auto() {
 	winVersion := fmt.Sprintf("%v.%v.%v", cmav, cmiv, cbn)
 
 	mask.SuperProperties = fmt.Sprintf(
-		`{"os":"Windows","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","client_build_number"TODO:,"client_event_source":null}`,
+		`{"os":"Windows","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","client_build_number"%v,"client_event_source":null}`,
 		releaseChan,
 		mask.DiscordVersion,
 		winVersion,
 		mask.Locale,
+		mask.PullBuildId(),
 	)
 }

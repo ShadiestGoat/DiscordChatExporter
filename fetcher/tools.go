@@ -75,7 +75,7 @@ func (conf ConfigType) discordRequest(method string, uri string, body io.Reader,
 	req.Header.Set("Sec-Fetch-Site", "same-origin")
 	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
 	req.Header.Set("X-Discord-Locale", conf.HeadersMask.Locale)
-	req.Header.Set("X-Super-Properties", "TODO:")
+	req.Header.Set("X-Super-Properties", conf.HeadersMask.SuperProperties)
 	req.Header.Set("Accept-Language", conf.HeadersMask.Locale)
 	// referer... I don't think you need it since its a more standard header..? Idk For the record its like this: https://canary.discord.com/channels/@me/CHANID
 

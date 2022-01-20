@@ -16,13 +16,17 @@ func (mask *HeadersMask) Auto() {
 	locale := localeReg.FindString(os.Getenv("LANG"))
 
 	if len(locale) == 0 {
-		fmt.Println("Warning! Locale cannot be found! This *may* raise suspicion from discord!")
+		fmt.Println("Warning! Locale cannot be found! This *may* raise suspicion from discord! Using default of en-US")
+		locale = "en-US"
 	} else {
 		locale = locale[:2] + "-" + locale[3:]
 	}
 
 	mask.Locale = locale
-	mask.PullDiscordVers("~/.config")
+	homeDir, err := os.UserHomeDir()
+	tools.PanicIfErr(err)
+
+	mask.PullDiscordVers(homeDir + "/.config")
 	mask.UserAgent = fmt.Sprintf("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) discord/%v Chrome/91.0.4472.164 Electron/13.6.6 Safari/537.36", mask.DiscordVersion)
 	
 	releaseChan := "stable"
@@ -34,6 +38,10 @@ func (mask *HeadersMask) Auto() {
 	cmd := exec.Command("uname", "-r")
 	osVersion, err := cmd.Output()
 	tools.PanicIfErr(err)
+	osVer := string(osVersion)
+	if osVer[len(osVer)-1:] == "\n" {
+		osVer = osVer[:len(osVer)-1]
+	}
 
 	winMgr := os.Getenv("XDG_CURRENT_DESKTOP")
 	if len(winMgr) == 0 {
@@ -56,16 +64,17 @@ func (mask *HeadersMask) Auto() {
 			break
 		}
 	}
-			
+
 	mask.SuperProperties = fmt.Sprintf(
-		`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"%v","client_build_number":TODO:,"client_event_source":null}`, 
+		`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"%v","client_build_number":%v,"client_event_source":null}`, 
 		releaseChan,
 		mask.DiscordVersion,
-		string(osVersion),
+		osVer,
 		mask.Locale,
 		winMgr,
 		distro,
+		mask.PullBuildId(),
 	)
-
 	mask.EncodeSuperProps()
+	panic(mask.SuperProperties)
 }
