@@ -22,7 +22,7 @@ func parseMap(envMap map[string]envOpt, config *Config) {
 		if len(val) == 0 {
 			// no input
 			if opts.Skip != nil {
-				if opts.Skip(*config) {
+				if opts.Skip(*config, false) {
 					continue
 				}
 			}
@@ -37,6 +37,11 @@ func parseMap(envMap map[string]envOpt, config *Config) {
 				*opts.PointString = opts.DefaultString
 			}
 		} else {
+			if opts.Skip != nil {
+				if opts.Skip(*config, true) {
+					continue
+				}
+			}
 			switch opts.Type {
 			case ENV_TYPE_BOOL:
 				parsedBoolP, err := ParseBool(val)
@@ -94,7 +99,10 @@ func Load() Config {
 		"HM_USER_AGENT": {
 			Type: ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.UserAgent,
-			Skip: func(config Config) bool {
+			Skip: func(config Config, selfExist bool) bool {
+				if doAuto && selfExist {
+					fmt.Println("Warning! HM_AUTO is set, so HM_USER_AGENT will not be used!")
+				}
 				return doAuto
 			},
 			NoDefault: true,
@@ -106,7 +114,21 @@ func Load() Config {
 		"HM_LOCALE": {
 			Type: ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.Locale,
-			Skip: func(config Config) bool {
+			Skip: func(config Config, selfExist bool) bool {
+				if doAuto && selfExist {
+					fmt.Println("Warning! HM_AUTO is set, so HM_LOCALE will not be used!")
+				}
+				return doAuto
+			},
+			NoDefault: true,
+		},
+		"HM_DISCORD_VERSION": {
+			Type: ENV_TYPE_STRING,
+			PointString: &config.HeadersMask.DiscordVersion,
+			Skip: func(config Config, selfExist bool) bool {
+				if doAuto && selfExist {
+					fmt.Println("Warning! HM_AUTO is set, so HM_DISCORD_VERSION will not be used!")
+				}
 				return doAuto
 			},
 			NoDefault: true,
@@ -114,7 +136,10 @@ func Load() Config {
 		"HM_SUPER_PROPS": {
 			Type: ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.SuperProperties,
-			Skip: func(config Config) bool {
+			Skip: func(config Config, selfExist bool) bool {
+				if doAuto && selfExist {
+					fmt.Println("Warning! HM_AUTO is set, so HM_SUPER_PROPS will not be used!")
+				}
 				return doAuto
 			},
 			NoDefault: true,
@@ -264,6 +289,10 @@ func Load() Config {
 		}
 	}
 
+	if config.HeadersMask.UseCanary {
+		config.HeadersMask.DomainPrefix = "canary."
+	}
+
 	if doAuto {
 		switch runtime.GOOS {
 			case "windows", "linux", "darwin":
@@ -274,9 +303,6 @@ func Load() Config {
 		config.HeadersMask.Auto()
 	}
 
-	if config.HeadersMask.UseCanary {
-		config.HeadersMask.DomainPrefix = "canary."
-	}
 
 	return config
 }

@@ -56,7 +56,7 @@ type envOpt struct {
 	PointBool *bool
 	PointString *string
 	NoDefault bool
-	Skip func(config Config) bool
+	Skip func(config Config, selfExist bool) bool
 }
 
 type envType int8
