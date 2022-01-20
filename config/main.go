@@ -161,11 +161,6 @@ func Load() Config {
 			PointString: &exportType,
 			DefaultString: "JSON",
 		},
-		"EXPORT_JSON_TOOLS": {
-			Type: ENV_TYPE_BOOL,
-			DefaultBool: true,
-			PointBool: &config.ExportJsonMeta,
-		},
 		"EXPORT_PLAIN_FORMAT": {
 			Type: ENV_TYPE_STRING,
 			DefaultString: `[{{%AUTHOR_NAME}}]: "{{%CONTENT}}"`,

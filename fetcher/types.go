@@ -3,11 +3,12 @@ package fetcher
 import "github.com/ShadiestGoat/DiscordChatExporter/discord"
 
 type JSONMetaData struct {
-	Msgs             []discord.Message    `json:"messages"`
-	IDToIndex        map[string]int       `json:"idToIndex"`
-	ByAuthor         map[string][]string  `json:"byAuthor"`
-	Attachments      []JSONMetaAttachment `json:"attachments"`
-	AuthorAttachment map[string][]int     `json:"attachment_byAuthor"`
+	MsgList             []discord.Message    `json:"messages"`
+	MsgIDToIndex        map[string]int       `json:"msgIdToIndex"`
+	MsgByAuthor         map[string][]string  `json:"msgByAuthor"`
+	AttachList     		[]JSONMetaAttachment `json:"attachments"`
+	AttachIDToIndex		map[string]int		 `json:"attachmentIdToIndex"`
+	AttachByAuthor		map[string][]string	 `json:"attachmentByAuthor"`
 }
 
 type JSONMetaAttachment struct {

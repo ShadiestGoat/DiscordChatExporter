@@ -353,19 +353,22 @@ func (conf ConfigType) FetchMain() {
 					fin = true
 
 				case config.EXPORT_TYPE_JSON:
-					attachments := []JSONMetaAttachment{}
 					newChanInfo := ParsedMessages[channel]
-					for _, attach := range msg.Attachments {
-						attachments = append(attachments, JSONMetaAttachment{
-							Attachment: attach,
-							AuthorID:   msg.Author.ID,
-						})
-						newChanInfo.AuthorAttachment[msg.Author.ID] = append(newChanInfo.AuthorAttachment[msg.Author.ID]) //TODO: newChanInfo.length??? I have no clue honestly. Im so fucking tired
-					}
+					
+					newChanInfo.MsgList = append(newChanInfo.MsgList, msg)
+					newChanInfo.MsgIDToIndex[msg.ID] = len(newChanInfo.MsgList) - 1
+					newChanInfo.MsgByAuthor[msg.Author.ID] = append(newChanInfo.MsgByAuthor[msg.Author.ID], msg.ID)
 
-					// TODO: The rest of the things as well
-					newChanInfo.Attachments = append(ParsedMessages[channel].Attachments, attachments...)
-					newChanInfo.Msgs = append(newChanInfo.Msgs, msg)
+					for _, attachRaw := range msg.Attachments {
+						attachment := JSONMetaAttachment{
+							Attachment: attachRaw,
+							AuthorID: msg.Author.ID,
+						}
+
+						newChanInfo.AttachList = append(newChanInfo.AttachList, attachment)
+						newChanInfo.AttachIDToIndex[attachment.ID] = len(newChanInfo.AttachIDToIndex) - 1
+						newChanInfo.AttachByAuthor[msg.Author.ID] = append(newChanInfo.AttachByAuthor[msg.Author.ID], attachment.ID)
+					}
 
 					ParsedMessages[channel] = newChanInfo
 				}
