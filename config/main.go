@@ -122,17 +122,6 @@ func Load() Config {
 			},
 			NoDefault: true,
 		},
-		"HM_DISCORD_VERSION": {
-			Type: ENV_TYPE_STRING,
-			PointString: &config.HeadersMask.DiscordVersion,
-			Skip: func(config Config, selfExist bool) bool {
-				if doAuto && selfExist {
-					fmt.Println("Warning! HM_AUTO is set, so HM_DISCORD_VERSION will not be used!")
-				}
-				return doAuto
-			},
-			NoDefault: true,
-		},
 		"HM_SUPER_PROPS": {
 			Type: ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.SuperProperties,
