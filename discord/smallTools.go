@@ -27,10 +27,6 @@ func IDToTimestamp(id string) int {
 
 	timestamp := (i >> 22) + 1420070400000
 
-	timeThing := time.Unix(0, timestamp*1000000)
-
-	fmt.Println(timeThing.Format("Jan 02 15:04:05 2006"))
-
 	return int(time.Unix(0, timestamp*1000000).UnixMicro())
 }
 
