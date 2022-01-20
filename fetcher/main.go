@@ -144,7 +144,7 @@ func (conf ConfigType) FetchMain() {
 				panic("Your BEFORE_ID is before AFTER_ID!")
 			}
 		}
-	} else {
+	} else if len(conf.Ids) > 1 {
 		if conf.Filter.MaxId != "" || conf.Filter.MinId != "" {
 			fmt.Println("Alert! There is a Max ID or a Min ID, but multiple channels. This is not supported. If you want between certian dates on all channels, use BEFORE_TIME or AFER_TIME")
 		}

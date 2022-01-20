@@ -237,21 +237,22 @@ func Load() Config {
 	}
 
 	idGotten := strings.Split(ids, " ")
+	idsVared := []string{}
 	
 	for _, ogId := range idGotten {
 		id, idOk := VerifySnowflake(ogId)
 		if !idOk {
 			fmt.Printf("WARNING! %v is not a valid discord id!\n", ogId)
 		} else {
-			idGotten = append(idGotten, id)
+			idsVared = append(idsVared, id)
 		}
 	}
 
-	if len(idGotten) == 0 {
+	if len(idsVared) == 0 {
 		panic("No valid IDs were found!")
 	}
 
-	config.Ids = idGotten
+	config.Ids = idsVared
 
 	switch exportType {
 	case "HTML":
