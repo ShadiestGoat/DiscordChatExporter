@@ -30,7 +30,7 @@ func (theme Theme) parseComponent(component string) string {
 	return preParseHTML(string(comp))
 }
 
-func (theme *Theme) LoadTheme(themeName string) {
+func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	themesMainLoc, err := os.Stat("themes")
 	if os.IsNotExist(err) || !themesMainLoc.IsDir() {
 		panic("'themes' folder is not available! This folder must be present!")
@@ -65,6 +65,7 @@ func (theme *Theme) LoadTheme(themeName string) {
 	theme.IMG = theme.parseComponent("img")
 	theme.STICKER = theme.parseComponent("sticker")
 	theme.REPLY = theme.parseComponent("reply")
+	theme.DownloadMedia = DW_MEDIA
 }
 
 var newLineReg = regexp.MustCompile(`\n`)
@@ -79,8 +80,12 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 
 	for _, attach := range msg.Attachments {
 		if attach.ContentType[:5] == "image" {
+			mediaUrl := attach.Url
+			if theme.DownloadMedia {
+				mediaUrl = filepath.Join("media", attach.MediaName())
+			}
 			attachContent += tools.ParseTemplate(theme.IMG, map[string]string{
-				"IMG_URL": attach.Url,
+				"IMG_URL": mediaUrl,
 				"WIDTH": fmt.Sprint(math.Floor(0.8*float64(attach.Width))),
 				"HEIGHT": fmt.Sprint(math.Floor(0.8*float64(attach.Height))),
 			})

@@ -17,4 +17,5 @@ type Theme struct {
 	REPLY,
 	STICKER,
 	IMG string
+	DownloadMedia bool
 }

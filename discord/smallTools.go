@@ -3,8 +3,9 @@ package discord
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
-	
+
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
 
@@ -37,4 +38,9 @@ func TimestampToID(timestamp int) string {
 	id := (timestamp/1000 - 1420070400000) << 22
 
 	return fmt.Sprint(id)
+}
+
+func (attachment Attachment) MediaName() string {
+	split := strings.Split(attachment.ContentType, "/")
+	return attachment.ID + "." + split[1]
 }

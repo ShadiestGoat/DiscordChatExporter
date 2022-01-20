@@ -192,7 +192,7 @@ func (conf ConfigType) FetchMain() {
 		theme := components.Theme{}
 
 		if conf.ExportType == config.EXPORT_TYPE_HTML {
-			theme.LoadTheme(conf.ExportHtmlThemeName)
+			theme.LoadTheme(conf.ExportHtmlThemeName, conf.DownloadMedia)
 			err = tools.CopyFile(filepath.Join(theme.BaseCss, "css", "style.css"), filepath.Join(outputDir, "base.css"))
 			tools.PanicIfErr(err)
 			err = tools.CopyFile(filepath.Join(theme.ThemeDir, "css", "style.css"), filepath.Join(outputDir, "style.css"))
@@ -310,7 +310,7 @@ func (conf ConfigType) FetchMain() {
 				if len(msg.Attachments) != 0 && conf.DownloadMedia {
 					for _, attach := range msg.Attachments {
 						attachments += fmt.Sprintf(`"%v",`, attach.Url)
-						DownloadMedia(mediaDir, attach.Url, attach.ID)
+						DownloadMedia(mediaDir, attach.Url, attach.MediaName())
 					}
 					attachments = attachments[:len(attachments)-1]
 				}
