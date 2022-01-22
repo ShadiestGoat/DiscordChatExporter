@@ -1,6 +1,6 @@
 # Discord Chat exporter
 
-> :warning: THIS PROJECT IS STILL UNDER DEVELOPMENT, NOT EVEN OUT AS A BETA :warning:
+> :warning: This project is out only as a beta, if you see any bugs, please make an issue :warning:
 
 This is a golang implemintation of a discord chat explorer i found a while back & can't find again
 
@@ -31,3 +31,6 @@ This is technically breaking the discord terms of service, as it is user botting
 
 However, so far, haven't been banned so make your own conclusions.
 
+## Contributing
+
+Pull requests are always welcome! Just make sure to follow the code of conduct :)
