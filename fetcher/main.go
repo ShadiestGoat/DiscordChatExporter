@@ -260,11 +260,9 @@ func (conf ConfigType) FetchMain() {
 			} // TODO: Add other channel types
 		}
 
-		lastID := ""
+		lastID := "0"
 
-		if minTime == 0 {
-			lastID = "0"
-		} else {
+		if minTime != 0 {
 			lastID = fmt.Sprint(discord.TimestampToID(minTime))
 		}
 
