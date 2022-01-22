@@ -208,8 +208,6 @@ p, h1, h2, h3, h4, h5, h6 {
     height: 100%;
 } 
 
-/* TODO: Setup so that anchor #id sets to middle of the page! */
-
 .reply {
     display: flex;
     flex-direction: row;
