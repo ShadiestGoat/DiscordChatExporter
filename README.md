@@ -1,5 +1,9 @@
 # Discord Chat exporter
 
+<p align="center">
+    <img src="logo-m.svg" width="25%">
+</p>
+
 > :warning: This project is out only as a beta, if you see any bugs, please make an issue :warning:
 
 This is a golang implemintation of a discord chat explorer i found a while back & can't find again
