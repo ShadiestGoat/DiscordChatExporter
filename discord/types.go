@@ -80,6 +80,7 @@ type Message struct {
 	Stickers []Sticker `json:"sticker_items"`
 	IsEdited bool
 	IsReply bool
+	IsSystemType bool
 	HasSticker bool
 	ReplyTo ReplyMsg
 }

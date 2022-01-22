@@ -105,6 +105,10 @@ func Load() Config {
 			},
 			NoDefault: true,
 		},
+		"IGNORE_SYSTEM_MSGS": {
+			Type: ENV_TYPE_BOOL,
+			PointBool: &config.IgnoreSystemMsgs,
+		},
 		"USE_CANARY": {
 			Type: ENV_TYPE_BOOL,
 			PointBool: &config.HeadersMask.UseCanary,

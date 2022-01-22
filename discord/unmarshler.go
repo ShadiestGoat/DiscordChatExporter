@@ -2,7 +2,6 @@ package discord
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
@@ -102,25 +101,8 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 		}
 	}
 
-	if msg.Type != 0 && msg.Type != 19 {
-		switch msg.Type {
-			case 1:
-				msg.Content = fmt.Sprintf(`*%v* has added someone!`, msg.Author.Name)
-			case 2:
-				msg.Content = fmt.Sprintf(`*%v* has removed someone!`, msg.Author.Name)
-			case 3:
-				msg.Content = fmt.Sprintf(`*%v* started a call!`, msg.Author.Name)
-			case 4:
-				msg.Content = fmt.Sprintf(`*%v* renamed the gc`, msg.Author.Name)
-			default:
-				panic(fmt.Sprintf("%#v", msg))
-		}
-
-		msg.Author = Author{
-			Name: "System",
-			Avatar: "c6a249645d46209f337279cd2ca998c7",
-			ID: "643945264868098049",
-		}
+	if msg.Type != MSGT_DEFAULT && msg.Type != MSGT_REPLY {
+		msg.IsSystemType = true
 	}
 
 	return nil

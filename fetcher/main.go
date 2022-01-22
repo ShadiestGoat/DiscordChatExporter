@@ -298,8 +298,9 @@ func (conf ConfigType) FetchMain() {
 				if msg.Timestamp > maxTime {
 					break
 				}
-				
-				// fmt.Println(msg.Content)
+				if msg.IsSystemType && conf.IgnoreSystemMsgs {
+					continue
+				}
 
 				for _, embed := range msg.Embeds {
 					if embed.Type == discord.EMBED_IMAGE {
@@ -350,6 +351,7 @@ func (conf ConfigType) FetchMain() {
 						"IS_REPLY":       fmt.Sprint(msg.IsReply),
 						"HAS_STICKERS":   fmt.Sprint(msg.HasSticker),
 						"STICKER_IDS":    stickers,
+						"MSG_TYPE":		  fmt.Sprint(msg.Type),
 					}))
 				case config.EXPORT_TYPE_HTML:
 					msgTimestamp := discord.TimestampToTime(msg.Timestamp)
