@@ -13,10 +13,21 @@ type Theme struct {
 	DM_START,
 	HTML_HEAD,
 	TOP_BAR,
-	START_DM,
+	START_CHAN,
 	REPLY,
 	STICKER,
 	GIF,
+	OTHER_MIME,
 	IMG string
 	DownloadMedia bool
+}
+
+type SystemMsgs struct {
+	USR_ADD,
+	USR_RM,
+	CALL,
+	RENAME,
+	ICON_CH,
+	PIN,
+	MEM_JOIN string
 }

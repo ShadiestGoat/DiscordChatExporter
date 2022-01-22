@@ -2,6 +2,8 @@ package discord
 
 import (
 	"fmt"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +42,18 @@ func TimestampToID(timestamp int) string {
 	return fmt.Sprint(id)
 }
 
+var badCharset = regexp.MustCompile(`; ?charset=.+?( |$)`)
+
 func (attachment Attachment) MediaName() string {
 	split := strings.Split(attachment.ContentType, "/")
-	return attachment.ID + "." + split[1]
+	ext := "." + split[1]
+	badCharset.ReplaceAllString(ext, "")
+
+	if ext == ".plain" {
+		ext = filepath.Ext(attachment.Url)
+	} else if ext == "svg+xml" {
+		ext = "svg"
+	}
+
+	return attachment.ID + ext
 }

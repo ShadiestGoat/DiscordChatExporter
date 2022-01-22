@@ -61,11 +61,13 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	theme.DATE_SEPERATOR = theme.parseComponent("dateSeperator")
 	theme.HTML_HEAD = theme.parseComponent("htmlHead")
 	theme.TOP_BAR = theme.parseComponent("topBar")
-	theme.START_DM = theme.parseComponent("startDm")
+	theme.START_CHAN = theme.parseComponent("startChan")
 	theme.IMG = theme.parseComponent("img")
 	theme.STICKER = theme.parseComponent("sticker")
 	theme.REPLY = theme.parseComponent("reply")
 	theme.GIF = theme.parseComponent("gifs")
+	theme.OTHER_MIME = theme.parseComponent("otherMime")
+
 	theme.DownloadMedia = DW_MEDIA
 }
 
@@ -91,7 +93,9 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 				"HEIGHT": fmt.Sprint(math.Floor(0.8*float64(attach.Height))),
 			})
 		} else {
-			panic(attach.ContentType)
+			attachContent += tools.ParseTemplate(theme.OTHER_MIME, map[string]string{
+				"FILENAME": attach.MediaName(),
+			})
 		}
 	}
 	
@@ -118,36 +122,40 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 		})
 	}
 
-	if firstMsg {
-		replyContent := ""
-		if msg.IsReply {
-			replyContent = tools.ParseTemplate(theme.REPLY, map[string]string{
-				"PFP": msg.ReplyTo.Author.URL(16),
-				"NAME": msg.ReplyTo.Author.Name,
-				"CONTENT": msg.ReplyTo.Content,
+	if msg.IsSystemType {
+		return "TODO:"
+	} else {
+		if firstMsg {
+			replyContent := ""
+			if msg.IsReply {
+				replyContent = tools.ParseTemplate(theme.REPLY, map[string]string{
+					"PFP": msg.ReplyTo.Author.URL(16),
+					"NAME": msg.ReplyTo.Author.Name,
+					"CONTENT": msg.ReplyTo.Content,
+				})
+			}
+	
+			return tools.ParseTemplate(theme.MSG_WITH_PFP, map[string]string{
+				"PFP": msg.Author.URL(256),
+				"USERNAME": msg.Author.Name,
+				"DATE": discord.TimestampToTime(msg.Timestamp).Format("Mon 02/01/2006 03:04:05 PM"),
+				"CONTENT": content,
+				"ATTACH_CONTENT": attachContent,
+				"ID": msg.ID,
+				"REPLY_CONTENT": replyContent,
+				"STICKER_CONTENT": stickerContent,
+				"GIFS": gifContents,
+			})
+		} else {
+			return tools.ParseTemplate(theme.MSG, map[string]string{
+				"DATE": discord.TimestampToTime(msg.Timestamp).Format("15:04"),
+				"CONTENT": content,
+				"ATTACH_CONTENT": attachContent,
+				"ID": msg.ID,
+				"STICKER_CONTENT": stickerContent,
+				"GIFS": gifContents,
 			})
 		}
-
-		return tools.ParseTemplate(theme.MSG_WITH_PFP, map[string]string{
-			"PFP": msg.Author.URL(256),
-			"USERNAME": msg.Author.Name,
-			"DATE": discord.TimestampToTime(msg.Timestamp).Format("Mon 02/01/2006 03:04:05 PM"),
-			"CONTENT": content,
-			"ATTACH_CONTENT": attachContent,
-			"ID": msg.ID,
-			"REPLY_CONTENT": replyContent,
-			"STICKER_CONTENT": stickerContent,
-			"GIFS": gifContents,
-		})
-	} else {
-		return tools.ParseTemplate(theme.MSG, map[string]string{
-			"DATE": discord.TimestampToTime(msg.Timestamp).Format("15:04"),
-			"CONTENT": content,
-			"ATTACH_CONTENT": attachContent,
-			"ID": msg.ID,
-			"STICKER_CONTENT": stickerContent,
-			"GIFS": gifContents,
-		})
 	}
 }
 
@@ -182,8 +190,22 @@ func (theme Theme) TopBar(title string, channelType discord.ChannelType) string 
 }
 
 func (theme Theme) StartDM(author discord.Author) string {
-	return tools.ParseTemplate(theme.START_DM, map[string]string{
+	return tools.ParseTemplate(theme.START_CHAN, map[string]string{
 		"TITLE": author.Name,
-		"PFP": author.URL(512),
+		"ICON": author.URL(512),
+	})
+}
+
+func (theme Theme) StartChannel(channel discord.Channel) string {
+	return tools.ParseTemplate(theme.START_CHAN, map[string]string{
+		"TITLE": "Welcome to #" + channel.Name,
+		"ICON": "assets/channelStart.png",
+	})
+}
+
+func (theme Theme) StartGroupDM(groupDM discord.Channel) string {
+	return tools.ParseTemplate(theme.START_CHAN, map[string]string{
+		"TITLE": groupDM.Name,
+		"ICON": groupDM.Icon,
 	})
 }

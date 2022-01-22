@@ -257,7 +257,14 @@ func (conf ConfigType) FetchMain() {
 
 			if channelParsed.Type == discord.CHANNEL_TYPE_DM {
 				file.WriteString(theme.StartDM(channelParsed.Recipients[0]))
-			} // TODO: Add other channel types
+			} else if channelParsed.Type == discord.CHANNEL_TYPE_GROUP_DM {
+				if len(channelParsed.Icon) == 0 {
+					channelParsed.Icon = "./assets/defaultGroupDMIcon.png"
+				}
+				file.WriteString(theme.StartGroupDM(channelParsed))
+			} else {
+				file.WriteString(theme.StartChannel(channelParsed))
+			}
 		}
 
 		lastID := "0"
@@ -300,23 +307,6 @@ func (conf ConfigType) FetchMain() {
 				}
 				if msg.IsSystemType && conf.IgnoreSystemMsgs {
 					continue
-				}
-
-				for _, embed := range msg.Embeds {
-					if embed.Type == discord.EMBED_IMAGE {
-						msg.Attachments = append(msg.Attachments, discord.Attachment{
-							ID:          "",
-							Name:        "",
-							Size:        0,
-							Url:         embed.Url,
-							Width:       embed.Thumbnail.Width,
-							Height:      embed.Thumbnail.Height,
-							ContentType: "image/webp",
-						})
-						if msg.Content == embed.Url {
-							msg.Content = ""
-						}
-					}
 				}
 
 				attachments := ""

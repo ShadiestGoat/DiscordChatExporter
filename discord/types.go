@@ -55,6 +55,7 @@ const (
 type EmbedImageThumbnail struct {
 	Width int
 	Height int
+	Url string `json:"url"`
 }
 
 type Sticker struct {
@@ -109,6 +110,7 @@ type Channel struct {
 	Name string `json:"name"`
 	Type ChannelType `json:"type"`
 	Recipients []Author `json:"recipients"`
+	Icon string `json:"icon"`
 }
 
 type Author struct {

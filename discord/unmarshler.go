@@ -2,9 +2,23 @@ package discord
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
+
+var imgType = []string{
+	"png",
+	"webp",
+	"jpg",
+	"jpeg",
+	"gif",
+	"svg+xml",
+}
 
 func (msg *Message) UnmarshalJSON(b []byte) error {
 	var s map[string]json.RawMessage
@@ -105,6 +119,48 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 		msg.IsSystemType = true
 	}
 
+	for i, attach := range msg.Attachments {
+		if attach.ContentType == "" {
+			for _, suff := range imgType {
+				if strings.HasSuffix(attach.Url, suff) {
+					attach.ContentType = "image/" + suff
+				}
+			}
+			if attach.ContentType == "" {
+				attach.ContentType = "text/plain"
+			}
+			msg.Attachments[i] = attach
+		}
+	}
+
+	newEmbeds := []Embed{}
+
+	for _, embed := range msg.Embeds {
+		if embed.Type == EMBED_IMAGE {
+			rand.Seed(time.Now().UnixNano())
+			id := fmt.Sprint(rand.Int())
+			
+			msg.Attachments = append(msg.Attachments, Attachment{
+				ID:          id,
+				Name:        "",
+				Size:        0,
+				Url:         embed.Thumbnail.Url,
+				Width:       embed.Thumbnail.Width,
+				Height:      embed.Thumbnail.Height,
+				ContentType: "image/webp",
+			})
+
+			if msg.Content == embed.Url {
+				msg.Content = ""
+			}
+
+		} else {
+			newEmbeds = append(newEmbeds, embed)
+		}
+	}
+
+	msg.Embeds = newEmbeds
+
 	return nil
 }
 
@@ -136,7 +192,6 @@ func (embed *Embed) UnmarshalJSON(b []byte) error {
 		switch key {
 			case "type":
 			case "url":
-				
 				parsed := ""
 				
 				err = json.Unmarshal(value, &parsed)
