@@ -11,13 +11,13 @@ This is a golang implemintation of a discord chat explorer i found a while back 
 ## Features
 
 - Highly configurable 
-- No need for dependencies
-- Multiple ways of exporting
-- Allows DM channels to be automatically pulled (without id)
-- Allows filters that aren't mutually exclusive
+- Barely any dependencies
+- Multiple ways of exporting (TEXT (ie. a log), JSON w/ meta info, HTML (visual))
+- Allows auto parsing of channels
+- Allows filters that aren't mutually exclusive (unlike discord)
 - Golang superiority
 - Mass downloads from guild(s)
-- Bloatless 
+- Commitments to less bloat
 
 ## Setup
 
