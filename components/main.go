@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"math"
 	"os"
@@ -18,10 +19,10 @@ func preParseHTML(html string) string {
 }
 
 func (theme Theme) parseComponent(component string) string {
-	comp, err := ioutil.ReadFile(filepath.Join(theme.ThemeDir, "components", component + ".html"))
+	comp, err := ioutil.ReadFile(filepath.Join(theme.ThemeDir, "components", component+".html"))
 
 	if os.IsNotExist(err) {
-		baseComp, err := ioutil.ReadFile(filepath.Join(theme.BaseCss, "components", component + ".html"))
+		baseComp, err := ioutil.ReadFile(filepath.Join(theme.BaseCss, "components", component+".html"))
 		tools.PanicIfErr(err)
 		comp = baseComp
 	} else {
@@ -37,18 +38,17 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	} else {
 		tools.PanicIfErr(err)
 	}
-	
+
 	themeDir := filepath.Join("themes", themeName)
-	
-	
+
 	themeLoc, err := os.Stat(themeDir)
-	
+
 	if os.IsNotExist(err) || !themeLoc.IsDir() {
 		panic("Cannot find theme!")
 	} else {
 		tools.PanicIfErr(err)
 	}
-	
+
 	theme.ThemeDir = themeDir
 	theme.BaseCss = filepath.Join("themes", "base")
 
@@ -67,6 +67,7 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	theme.REPLY = theme.parseComponent("reply")
 	theme.GIF = theme.parseComponent("gifs")
 	theme.OTHER_MIME = theme.parseComponent("otherMime")
+	theme.MENTION = theme.parseComponent("mention")
 
 	theme.DownloadMedia = DW_MEDIA
 }
@@ -77,9 +78,12 @@ var tabReg = regexp.MustCompile(`\t`)
 
 func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Message, firstMsg bool) string {
 	content := msg.Content
-	content = newLineReg.ReplaceAllString(content, "<br />")
 
 	attachContent := ""
+
+	content = template.HTMLEscapeString(content)
+
+	content = newLineReg.ReplaceAllString(content, "<br />")
 
 	for _, attach := range msg.Attachments {
 		if attach.ContentType[:5] == "image" {
@@ -89,24 +93,24 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			}
 			attachContent += tools.ParseTemplate(theme.IMG, map[string]string{
 				"IMG_URL": mediaUrl,
-				"WIDTH": fmt.Sprint(math.Floor(0.8*float64(attach.Width))),
-				"HEIGHT": fmt.Sprint(math.Floor(0.8*float64(attach.Height))),
+				"WIDTH":   fmt.Sprint(math.Floor(0.8 * float64(attach.Width))),
+				"HEIGHT":  fmt.Sprint(math.Floor(0.8 * float64(attach.Height))),
 			})
 		} else {
 			attachContent += tools.ParseTemplate(theme.OTHER_MIME, map[string]string{
-				"FILENAME": attach.MediaName(),
+				"FILENAME": attach.Name,
 			})
 		}
 	}
-	
+
 	gifContents := ""
 
 	for _, embed := range msg.Embeds {
 		if embed.Type == discord.EMBED_GIF {
 			gifContents += tools.ParseTemplate(theme.GIF, map[string]string{
 				"VIDEO_URL": embed.Url,
-				"WIDTH": fmt.Sprint(float64(embed.Thumbnail.Width)*0.7),
-				"HEIGHT": fmt.Sprint(float64(embed.Thumbnail.Height)*0.7),
+				"WIDTH":     fmt.Sprint(float64(embed.Thumbnail.Width) * 0.7),
+				"HEIGHT":    fmt.Sprint(float64(embed.Thumbnail.Height) * 0.7),
 			})
 			if msg.Content == embed.GifContentUrl {
 				content = ""
@@ -125,35 +129,44 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 	if msg.IsSystemType {
 		return "TODO:"
 	} else {
+		for _, mention := range msg.Mentions {
+			idReg := regexp.MustCompile(fmt.Sprintf(`&lt;@!?%v&gt;`, mention.ID))
+			content = idReg.ReplaceAllString(content, tools.ParseTemplate(theme.MENTION, map[string]string{
+				"MENTION_NAME":   mention.Name,
+				"MENTION_PREFIX": "@",
+			}))
+		}
+
 		if firstMsg {
 			replyContent := ""
+
 			if msg.IsReply {
 				replyContent = tools.ParseTemplate(theme.REPLY, map[string]string{
-					"PFP": msg.ReplyTo.Author.URL(16),
-					"NAME": msg.ReplyTo.Author.Name,
+					"PFP":     msg.ReplyTo.Author.URL(16),
+					"NAME":    msg.ReplyTo.Author.Name,
 					"CONTENT": msg.ReplyTo.Content,
 				})
 			}
-	
+
 			return tools.ParseTemplate(theme.MSG_WITH_PFP, map[string]string{
-				"PFP": msg.Author.URL(256),
-				"USERNAME": msg.Author.Name,
-				"DATE": discord.TimestampToTime(msg.Timestamp).Format("Mon 02/01/2006 03:04:05 PM"),
-				"CONTENT": content,
-				"ATTACH_CONTENT": attachContent,
-				"ID": msg.ID,
-				"REPLY_CONTENT": replyContent,
+				"PFP":             msg.Author.URL(256),
+				"USERNAME":        msg.Author.Name,
+				"DATE":            discord.TimestampToTime(msg.Timestamp).Format("Mon 02/01/2006 03:04:05 PM"),
+				"CONTENT":         content,
+				"ATTACH_CONTENT":  attachContent,
+				"ID":              msg.ID,
+				"REPLY_CONTENT":   replyContent,
 				"STICKER_CONTENT": stickerContent,
-				"GIFS": gifContents,
+				"GIFS":            gifContents,
 			})
 		} else {
 			return tools.ParseTemplate(theme.MSG, map[string]string{
-				"DATE": discord.TimestampToTime(msg.Timestamp).Format("15:04"),
-				"CONTENT": content,
-				"ATTACH_CONTENT": attachContent,
-				"ID": msg.ID,
+				"DATE":            discord.TimestampToTime(msg.Timestamp).Format("15:04"),
+				"CONTENT":         content,
+				"ATTACH_CONTENT":  attachContent,
+				"ID":              msg.ID,
 				"STICKER_CONTENT": stickerContent,
-				"GIFS": gifContents,
+				"GIFS":            gifContents,
 			})
 		}
 	}
@@ -175,16 +188,16 @@ func (theme Theme) TopBar(title string, channelType discord.ChannelType) string 
 	icon := ""
 
 	switch channelType {
-		case discord.CHANNEL_TYPE_DM:
-			icon = theme.SVG_DM
-		case discord.CHANNEL_TYPE_GROUP_DM:
-			icon = theme.SVG_GROUP_DM
-		default:
-			icon = theme.SVG_CHANNEL
+	case discord.CHANNEL_TYPE_DM:
+		icon = theme.SVG_DM
+	case discord.CHANNEL_TYPE_GROUP_DM:
+		icon = theme.SVG_GROUP_DM
+	default:
+		icon = theme.SVG_CHANNEL
 	}
-	
+
 	return tools.ParseTemplate(theme.TOP_BAR, map[string]string{
-		"ICON": icon,
+		"ICON":  icon,
 		"TITLE": title,
 	})
 }
@@ -192,20 +205,20 @@ func (theme Theme) TopBar(title string, channelType discord.ChannelType) string 
 func (theme Theme) StartDM(author discord.Author) string {
 	return tools.ParseTemplate(theme.START_CHAN, map[string]string{
 		"TITLE": author.Name,
-		"ICON": author.URL(512),
+		"ICON":  author.URL(512),
 	})
 }
 
 func (theme Theme) StartChannel(channel discord.Channel) string {
 	return tools.ParseTemplate(theme.START_CHAN, map[string]string{
 		"TITLE": "Welcome to #" + channel.Name,
-		"ICON": "assets/channelStart.png",
+		"ICON":  "assets/channelStart.png",
 	})
 }
 
 func (theme Theme) StartGroupDM(groupDM discord.Channel) string {
 	return tools.ParseTemplate(theme.START_CHAN, map[string]string{
 		"TITLE": groupDM.Name,
-		"ICON": groupDM.Icon,
+		"ICON":  groupDM.Icon,
 	})
 }

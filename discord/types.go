@@ -10,12 +10,12 @@ const (
 )
 
 type Embed struct {
-	Type EmbedType
-	Url string
-	Title string
-	Description string
-	Color string
-	Thumbnail EmbedImageThumbnail
+	Type          EmbedType
+	Url           string
+	Title         string
+	Description   string
+	Color         string
+	Thumbnail     EmbedImageThumbnail
 	GifContentUrl string
 }
 
@@ -53,9 +53,9 @@ const (
 )
 
 type EmbedImageThumbnail struct {
-	Width int
+	Width  int
 	Height int
-	Url string `json:"url"`
+	Url    string `json:"url"`
 }
 
 type Sticker struct {
@@ -63,30 +63,28 @@ type Sticker struct {
 }
 
 type ReplyMsg struct {
-	ID string `json:"id"`
+	ID      string `json:"id"`
 	Content string `json:"content"`
-	Author Author `json:"author"`
+	Author  Author `json:"author"`
 }
 
 type Message struct {
 	ReplyMsg
-	Channel string `json:"channel_id"`
-	Attachments []Attachment `json:"attachments"`
-	Embeds []Embed `json:"embeds"`
-	Mentions []Author `json:"mentions"`
-	MentionRoles []string `json:"mention_roles"`
-	MentionsEveryone bool `json:"mention_everyone"`
-	Timestamp int `json:"timestamp"`
-	Type MsgType `json:"type"`
-	Stickers []Sticker `json:"sticker_items"`
-	IsEdited bool
-	IsReply bool
-	IsSystemType bool
-	HasSticker bool
-	ReplyTo ReplyMsg
+	Channel          string       `json:"channel_id"`
+	Attachments      []Attachment `json:"attachments"`
+	Embeds           []Embed      `json:"embeds"`
+	Mentions         []Author     `json:"mentions"`
+	MentionRoles     []string     `json:"mention_roles"`
+	MentionsEveryone bool         `json:"mention_everyone"`
+	Timestamp        int          `json:"timestamp"`
+	Type             MsgType      `json:"type"`
+	Stickers         []Sticker    `json:"sticker_items"`
+	IsEdited         bool
+	IsReply          bool
+	IsSystemType     bool
+	HasSticker       bool
+	ReplyTo          ReplyMsg
 }
-
-
 
 type ChannelType int8
 
@@ -105,27 +103,27 @@ const (
 )
 
 type Channel struct {
-	Id string `json:"id"`
-	Nsfw bool `json:"nsfw"`
-	Name string `json:"name"`
-	Type ChannelType `json:"type"`
-	Recipients []Author `json:"recipients"`
-	Icon string `json:"icon"`
+	Id         string      `json:"id"`
+	Nsfw       bool        `json:"nsfw"`
+	Name       string      `json:"name"`
+	Type       ChannelType `json:"type"`
+	Recipients []Author    `json:"recipients"`
+	Icon       string      `json:"icon"`
 }
 
 type Author struct {
-	ID string `json:"id"`
-	Name string `json:"username"`
-	Avatar string `json:"avatar"`
+	ID            string `json:"id"`
+	Name          string `json:"username"`
+	Avatar        string `json:"avatar"`
 	Discriminator string `json:"discriminator"`
 }
 
 type Attachment struct {
-	ID string `json:"id"`
-	Name string `json:"filename"`
-	Size int `json:"size"`
-	Url string `json:"url"`
-	Width int `json:"width"`
-	Height int `json:"height"`
+	ID          string `json:"id"`
+	Name        string `json:"filename"`
+	Size        int    `json:"size"`
+	Url         string `json:"url"`
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
 	ContentType string `json:"content_type"`
 }

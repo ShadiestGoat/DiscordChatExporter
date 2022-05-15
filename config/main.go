@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/ShadiestGoat/DiscordChatExporter/discord"
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 	"github.com/joho/godotenv"
 )
@@ -65,7 +65,7 @@ func Load() Config {
 		tools.PanicIfErr(err)
 		ignoreEnv = parsedIgnore
 	}
-	
+
 	envFileName := os.Getenv("ENV_FILENAME")
 
 	if len(envFileName) == 0 {
@@ -88,14 +88,14 @@ func Load() Config {
 	priorityMap := map[string]envOpt{
 		"HM_AUTO": {
 			DefaultBool: true,
-			Type: ENV_TYPE_BOOL,
-			PointBool: &doAuto,
+			Type:        ENV_TYPE_BOOL,
+			PointBool:   &doAuto,
 		},
 	}
 
 	envMap := map[string]envOpt{
 		"HM_USER_AGENT": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.UserAgent,
 			Skip: func(config Config, selfExist bool) bool {
 				if doAuto && selfExist {
@@ -106,15 +106,15 @@ func Load() Config {
 			NoDefault: true,
 		},
 		"IGNORE_SYSTEM_MSGS": {
-			Type: ENV_TYPE_BOOL,
+			Type:      ENV_TYPE_BOOL,
 			PointBool: &config.IgnoreSystemMsgs,
 		},
 		"USE_CANARY": {
-			Type: ENV_TYPE_BOOL,
+			Type:      ENV_TYPE_BOOL,
 			PointBool: &config.HeadersMask.UseCanary,
 		},
 		"HM_LOCALE": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.Locale,
 			Skip: func(config Config, selfExist bool) bool {
 				if doAuto && selfExist {
@@ -125,7 +125,7 @@ func Load() Config {
 			NoDefault: true,
 		},
 		"HM_SUPER_PROPS": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &config.HeadersMask.SuperProperties,
 			Skip: func(config Config, selfExist bool) bool {
 				if doAuto && selfExist {
@@ -136,75 +136,75 @@ func Load() Config {
 			NoDefault: true,
 		},
 		"TOKEN": {
-			Type: ENV_TYPE_STRING,
-			NoDefault: true,
+			Type:        ENV_TYPE_STRING,
+			NoDefault:   true,
 			PointString: &config.Token,
 		},
 		"ID_TYPE": {
-			Type: ENV_TYPE_STRING,
+			Type:          ENV_TYPE_STRING,
 			DefaultString: "CHANNEL",
-			PointString: &idType,
+			PointString:   &idType,
 		},
 		"ID": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &ids,
-			NoDefault: true,
+			NoDefault:   true,
 		},
 		"IGNORE_NSFW_CHANNEL": {
-			Type: ENV_TYPE_BOOL,
-			PointBool: &config.IgnoreNsfw,
+			Type:        ENV_TYPE_BOOL,
+			PointBool:   &config.IgnoreNsfw,
 			DefaultBool: false,
 		},
 		"DOWNLOAD_MEDIA": {
 			DefaultBool: true,
-			Type: ENV_TYPE_BOOL,
-			PointBool: &config.DownloadMedia,
+			Type:        ENV_TYPE_BOOL,
+			PointBool:   &config.DownloadMedia,
 		},
 		"EXPORT_TYPE": {
-			Type: ENV_TYPE_STRING,
-			PointString: &exportType,
+			Type:          ENV_TYPE_STRING,
+			PointString:   &exportType,
 			DefaultString: "JSON",
 		},
 		"EXPORT_PLAIN_FORMAT": {
-			Type: ENV_TYPE_STRING,
+			Type:          ENV_TYPE_STRING,
 			DefaultString: `[{{%AUTHOR_NAME}}]: "{{%CONTENT}}"`,
-			PointString: &config.ExportTextFormat,
+			PointString:   &config.ExportTextFormat,
 		},
 		"EXPORT_HTML_THEME": {
-			Type: ENV_TYPE_STRING,
+			Type:          ENV_TYPE_STRING,
 			DefaultString: "dark",
-			PointString: &config.ExportHtmlThemeName,
+			PointString:   &config.ExportHtmlThemeName,
 		},
 		"EXPORT_LOCATION": {
-			Type: ENV_TYPE_STRING,
+			Type:          ENV_TYPE_STRING,
 			DefaultString: filepath.Join("output", "{{%CHANNEL_ID}}"),
-			PointString: &config.ExportLocation,
+			PointString:   &config.ExportLocation,
 		},
 		"MSG_LIMIT_NUM": {
-			Type: ENV_TYPE_STRING,
+			Type:          ENV_TYPE_STRING,
 			DefaultString: "all",
-			PointString: &limNum,
+			PointString:   &limNum,
 		},
 		"BEFORE_ID": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &config.Filter.MaxId,
 		},
 		"AFTER_ID": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &config.Filter.MinId,
 		},
 		"AFTER_TIME": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &minTime,
 		},
 		"BEFORE_TIME": {
-			Type: ENV_TYPE_STRING,
+			Type:        ENV_TYPE_STRING,
 			PointString: &maxTime,
 		},
 		"USE_LIMIT_50": {
-			Type: ENV_TYPE_BOOL,
+			Type:        ENV_TYPE_BOOL,
 			DefaultBool: true,
-			PointBool: &config.UseLimit50,
+			PointBool:   &config.UseLimit50,
 		},
 	}
 
@@ -224,7 +224,7 @@ func Load() Config {
 
 	idGotten := strings.Split(ids, " ")
 	idsVared := []string{}
-	
+
 	for _, ogId := range idGotten {
 		id, idOk := VerifySnowflake(ogId)
 		if !idOk {
@@ -266,13 +266,13 @@ func Load() Config {
 	if len(maxTime) != 0 {
 		parsedMax, err := strconv.ParseInt(maxTime, 10, 64)
 		tools.PanicIfErr(err)
-		config.Filter.MaxTime = int(time.Unix(parsedMax, 0).UnixMicro())
+		config.Filter.MaxTime = int(discord.TimestampToTime(int(parsedMax)).UnixMicro())
 	}
 
 	if len(minTime) != 0 {
 		parsedMin, err := strconv.ParseInt(minTime, 10, 64)
 		tools.PanicIfErr(err)
-		config.Filter.MaxTime = int(time.Unix(parsedMin, 0).UnixMicro())
+		config.Filter.MaxTime = int(discord.TimestampToTime(int(parsedMin)).UnixMicro())
 		if config.Filter.MaxTime < config.Filter.MinTime {
 			panic("AFTER_TIME is after BEFORE_TIME")
 		}
@@ -284,14 +284,13 @@ func Load() Config {
 
 	if doAuto {
 		switch runtime.GOOS {
-			case "windows", "linux", "darwin":
-			default:
-				panic("Auto header masking is not supported on your os!")
+		case "windows", "linux", "darwin":
+		default:
+			panic("Auto header masking is not supported on your os!")
 		}
 
 		config.HeadersMask.Auto()
 	}
-
 
 	return config
 }

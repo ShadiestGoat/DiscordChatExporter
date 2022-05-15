@@ -33,8 +33,8 @@ func IDToTimestamp(id string) int {
 	return int(time.Unix(0, timestamp*1000000).UnixMicro())
 }
 
-// Reverse of IDToTimestamp, but note that because of the nature of snowflakes this will output the exact same output. 
-// 
+// Reverse of IDToTimestamp, but note that because of the nature of snowflakes this will output the exact same output.
+//
 // The last 6 digits are different Can anyone confirm this? I'm pretty sure this is true, but idk man
 func TimestampToID(timestamp int) string {
 	id := (timestamp/1000 - 1420070400000) << 22
@@ -46,7 +46,9 @@ var badCharset = regexp.MustCompile(`; ?charset=.+?( |$)`)
 
 func (attachment Attachment) MediaName() string {
 	split := strings.Split(attachment.ContentType, "/")
-	ext := "." + split[1]
+	// remove ;charset=
+	extSuf := strings.Split(split[1], ";")
+	ext := "." + extSuf[0]
 	badCharset.ReplaceAllString(ext, "")
 
 	if ext == ".plain" {

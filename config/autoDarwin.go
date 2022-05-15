@@ -24,13 +24,13 @@ func (mask *HeadersMask) Auto() {
 	tools.PanicIfErr(err)
 	mask.PullDiscordVers(homeDir + "/Library/Application Support")
 	mask.UserAgent = fmt.Sprintf("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) discord/%v Chrome/91.0.4472.164 Electron/13.4.0 Safari/537.36", mask.DiscordVersion)
-	
+
 	releaseChan := "stable"
 
 	if mask.UseCanary {
 		releaseChan = "canary"
 	}
-	
+
 	cmd := exec.Command("uname", "-r")
 	osVersion, err := cmd.Output()
 	tools.PanicIfErr(err)

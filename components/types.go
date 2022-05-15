@@ -18,6 +18,7 @@ type Theme struct {
 	STICKER,
 	GIF,
 	OTHER_MIME,
+	MENTION,
 	IMG string
 	DownloadMedia bool
 }

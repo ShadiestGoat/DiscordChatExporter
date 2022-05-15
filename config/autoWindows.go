@@ -4,8 +4,8 @@ package config
 
 import (
 	"fmt"
-	"os/exec"
 	"os"
+	"os/exec"
 
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 	"golang.org/x/sys/windows/registry"

@@ -28,13 +28,13 @@ func (mask *HeadersMask) Auto() {
 
 	mask.PullDiscordVers(homeDir + "/.config")
 	mask.UserAgent = fmt.Sprintf("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) discord/%v Chrome/91.0.4472.164 Electron/13.6.6 Safari/537.36", mask.DiscordVersion)
-	
+
 	releaseChan := "stable"
 
 	if mask.UseCanary {
 		releaseChan = "canary"
 	}
-	
+
 	cmd := exec.Command("uname", "-r")
 	osVersion, err := cmd.Output()
 	tools.PanicIfErr(err)
@@ -49,7 +49,7 @@ func (mask *HeadersMask) Auto() {
 	} else {
 		winMgr += ","
 	}
-	
+
 	osInfo, err := ioutil.ReadFile("/etc/os-release")
 	tools.PanicIfErr(err)
 	distro := ""
@@ -66,7 +66,7 @@ func (mask *HeadersMask) Auto() {
 	}
 
 	mask.SuperProperties = fmt.Sprintf(
-		`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"%v","client_build_number":%v,"client_event_source":null}`, 
+		`{"os":"Linux","browser":"Discord Client","release_channel":"%v","client_version":"%v","os_version":"%v","os_arch":"x64","system_locale":"%v","window_manager":"%vunknown","distro":"%v","client_build_number":%v,"client_event_source":null}`,
 		releaseChan,
 		mask.DiscordVersion,
 		osVer,

@@ -39,8 +39,6 @@ func (conf ConfigType) FetchMain() {
 	conf.GetCookie()
 	conf.checkToken()
 
-	ParsedMessages := map[string]JSONMetaData{}
-
 	maxTime := conf.Filter.MaxTime
 	minTime := conf.Filter.MinTime
 	maxMsg := discord.Message{}
@@ -153,7 +151,7 @@ func (conf ConfigType) FetchMain() {
 		maxTime = maxMsg.Timestamp
 	}
 
-	if (minTime < minMsg.Timestamp && maxMsg.Timestamp != 0 )|| (minTime == 0 && minMsg.Timestamp != 0) {
+	if (minTime < minMsg.Timestamp && maxMsg.Timestamp != 0) || (minTime == 0 && minMsg.Timestamp != 0) {
 		minTime = minMsg.Timestamp
 	}
 
@@ -163,6 +161,7 @@ func (conf ConfigType) FetchMain() {
 
 	for _, channel := range conf.Ids {
 		NumLeft := conf.Filter.NumMax
+		ParsedMessages := JSONMetaData{}
 
 		outputDir := tools.ParseTemplate(conf.ExportLocation, map[string]string{
 			"CHANNEL_ID": channel,
@@ -289,6 +288,11 @@ func (conf ConfigType) FetchMain() {
 				fin = true // don't break because you still need proccessing
 			}
 
+			if len(allMsgs) == 0 {
+				fin = true
+				break
+			}
+
 			//Thank you https://stackoverflow.com/questions/19239449/how-do-i-reverse-an-array-in-go
 			for i, j := 0, len(allMsgs)-1; i < j; i, j = i+1, j-1 {
 				allMsgs[i], allMsgs[j] = allMsgs[j], allMsgs[i]
@@ -305,6 +309,7 @@ func (conf ConfigType) FetchMain() {
 				if msg.Timestamp > maxTime {
 					break
 				}
+
 				if msg.IsSystemType && conf.IgnoreSystemMsgs {
 					continue
 				}
@@ -323,17 +328,17 @@ func (conf ConfigType) FetchMain() {
 				if len(msg.Stickers) != 0 && conf.DownloadMedia {
 					for _, sticker := range msg.Stickers {
 						stickers += fmt.Sprintf(`"%v",`, sticker.ID)
-						DownloadMedia(mediaDir, sticker.URL(512), "STICKER_" + sticker.ID)
+						DownloadMedia(mediaDir, sticker.URL(512), "STICKER_"+sticker.ID)
 					}
 					stickers = stickers[:len(stickers)-1]
 				}
-
 				switch conf.ExportType {
 				case config.EXPORT_TYPE_TEXT:
-					file.WriteString(tools.ParseTemplate(conf.ExportTextFormat+"\n", map[string]string{
+					exportStr := tools.ParseTemplate(conf.ExportTextFormat+"\n", map[string]string{
 						"AUTHOR_NAME":    msg.Author.Name,
 						"AUTHOR_ID":      msg.Author.ID,
 						"TIMESTAMP":      fmt.Sprint(msg.Timestamp),
+						"TIME_FORMAT":    discord.TimestampToTime(msg.Timestamp).Format("01/02/06 03:04:05PM"),
 						"WAS_EDITED":     fmt.Sprint(msg.IsEdited),
 						"CONTENT":        msg.Content,
 						"HAS_ATTACHMENT": fmt.Sprint(len(msg.Attachments) != 0),
@@ -341,36 +346,52 @@ func (conf ConfigType) FetchMain() {
 						"IS_REPLY":       fmt.Sprint(msg.IsReply),
 						"HAS_STICKERS":   fmt.Sprint(msg.HasSticker),
 						"STICKER_IDS":    stickers,
-						"MSG_TYPE":		  fmt.Sprint(msg.Type),
-					}))
+						"MSG_TYPE":       fmt.Sprint(msg.Type),
+					})
+					file.WriteString(exportStr)
 				case config.EXPORT_TYPE_HTML:
 					msgTimestamp := discord.TimestampToTime(msg.Timestamp)
 					sameDate := tools.SameDate(msgTimestamp, discord.TimestampToTime(prevMsg.Timestamp))
 					if !sameDate {
 						file.WriteString(theme.DateSeperator(msgTimestamp))
 					}
-					file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply))
+					hasNotImg := false
+					for _, atta := range msg.Attachments {
+						if len(atta.ContentType) <= 6 {
+							hasNotImg = true
+							break
+						}
+						if atta.ContentType[:5] != "image" {
+							hasNotImg = true
+							break
+						}
+					}
+					file.WriteString(theme.MessageComponent(msg, prevMsg, prevMsg.Author.ID != msg.Author.ID || !sameDate || msg.IsReply || hasNotImg))
 				case config.EXPORT_TYPE_JSON:
-					newChanInfo := ParsedMessages[channel]
-					
-					newChanInfo.MsgList = append(newChanInfo.MsgList, msg)
-					newChanInfo.MsgIDToIndex[msg.ID] = len(newChanInfo.MsgList) - 1
-					newChanInfo.MsgByAuthor[msg.Author.ID] = append(newChanInfo.MsgByAuthor[msg.Author.ID], msg.ID)
+
+					if ParsedMessages.MsgIDToIndex == nil {
+						ParsedMessages.MsgIDToIndex = map[string]int{}
+						ParsedMessages.MsgByAuthor = map[string][]string{}
+						ParsedMessages.AttachIDToIndex = map[string]int{}
+						ParsedMessages.AttachByAuthor = map[string][]string{}
+					}
+
+					ParsedMessages.MsgList = append(ParsedMessages.MsgList, msg)
+					ParsedMessages.MsgIDToIndex[msg.ID] = len(ParsedMessages.MsgList) - 1
+					ParsedMessages.MsgByAuthor[msg.Author.ID] = append(ParsedMessages.MsgByAuthor[msg.Author.ID], msg.ID)
 
 					for _, attachRaw := range msg.Attachments {
 						attachment := JSONMetaAttachment{
 							Attachment: attachRaw,
-							AuthorID: msg.Author.ID,
+							AuthorID:   msg.Author.ID,
 						}
-						
-						newChanInfo.AttachList = append(newChanInfo.AttachList, attachment)
-						newChanInfo.AttachIDToIndex[attachment.ID] = len(newChanInfo.AttachIDToIndex) - 1
-						newChanInfo.AttachByAuthor[msg.Author.ID] = append(newChanInfo.AttachByAuthor[msg.Author.ID], attachment.ID)
+
+						ParsedMessages.AttachList = append(ParsedMessages.AttachList, attachment)
+						ParsedMessages.AttachIDToIndex[attachment.ID] = len(ParsedMessages.AttachIDToIndex) - 1
+						ParsedMessages.AttachByAuthor[msg.Author.ID] = append(ParsedMessages.AttachByAuthor[msg.Author.ID], attachment.ID)
 					}
-					
-					ParsedMessages[channel] = newChanInfo
 				}
-				
+
 				prevMsg = msg
 				NumLeft--
 			}
