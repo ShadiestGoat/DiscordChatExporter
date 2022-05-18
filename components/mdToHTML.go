@@ -3,6 +3,7 @@ package components
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var rReg = regexp.MustCompile(`\r`)
@@ -101,6 +102,7 @@ func MDToHTML(content string) (string, bool) {
 	icI := 0
 	esI := 0
 
+	// escaped characters
 	for syntax := range mdSyntax {
 		reg := regexp.MustCompile(`\\` + syntax)
 		for reg.MatchString(content) {
@@ -110,11 +112,33 @@ func MDToHTML(content string) (string, bool) {
 			esI++
 		}
 	}
+	
+	skipIC := 0
 
 	// inline code index
-	for mdSpreadInline.Reg.MatchString(content) {
-		curLoc := mdSpreadInline.Reg.FindStringIndex(content)
-		inlineCodeMap[icI] = content[curLoc[0]:curLoc[1]]
+	for skipIC != len(mdSpreadInline.Reg.FindAllStringIndex(content, skipIC + 1)) {
+		curLocs := mdSpreadInline.Reg.FindAllStringIndex(content, skipIC + 1)
+		curLoc := curLocs[skipIC]
+
+		testContent := content[curLoc[0]:curLoc[1]]
+		codeBlock := false
+
+		if len(testContent) >= 7 {
+			codeBlock = testContent[:3] == "```" && testContent[len(testContent)-3:] == "```"
+		}
+
+		// don't parse multi-line `inline code`
+		if len(testContent) >= 3 && !codeBlock {
+			if testContent[:1] == "`" && testContent[len(testContent)-1:] == "`" {
+				if len(strings.Split(testContent, "<br />")) != 1 {
+					skipIC++
+					continue
+				}
+			}
+		}
+
+		inlineCodeMap[icI] = testContent
+
 		content = fmt.Sprintf("%v--\tic%v--%v", content[:curLoc[0]], icI, content[curLoc[1]:])
 		icI++
 	}
@@ -134,7 +158,45 @@ func MDToHTML(content string) (string, bool) {
 
 	for i, str := range inlineCodeMap {
 		reg := regexp.MustCompile(fmt.Sprintf(`--\tic%v--`, i))
-		content = reg.ReplaceAllString(content, str)
+		prefix := ""
+		suffix := ""
+
+		for {
+			changed := false
+			if len(str) >= 7 {
+				if str[:3] == "```" && str[len(str)-3:] == "```" {
+					str = str[3 : len(str)-3]
+					prefix += `<span class="code-block-wrapper"><span class="code-block">`
+					suffix = "</span></span>" + suffix
+					spl := strings.SplitN(str, "<br />", 2)
+
+					if len(spl) == 2 {
+						str = spl[1]
+					}
+
+					changed = true
+				}
+			}
+			if len(str) >= 3 {
+				if str[:1] == "`" && str[len(str)-1:] == "`" {
+					str = str[1 : len(str)-1]
+					prefix += `<span class="inline-code">`
+					suffix = "</span>" + suffix
+					changed = true
+				}
+			}
+			if !changed {
+				break
+			}
+		}
+
+		if len(str) >= 6 {
+			if str[len(str)-6:] == "<br />" {
+				str = str[:len(str)-6]
+			}
+		}
+
+		content = reg.ReplaceAllString(content, prefix + str + suffix)
 	}
 
 	for i, str := range escapedSyntaxMap {

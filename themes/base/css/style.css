@@ -324,3 +324,17 @@ p, h1, h2, h3, h4, h5, h6 {
     width: 5px;
     width: 100%;
 }
+
+.inline-code {
+    background-color: var(--super-dark);
+    padding: 0.2vh 0.4vw;
+    border-radius: 6.25px;
+}
+
+.code-block-wrapper {
+    background-color: var(--super-dark);
+    padding: 1vh 1vw;
+    border-radius: 6.25px;
+    width: 80vw;
+    display: block;
+}
