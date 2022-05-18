@@ -53,3 +53,4 @@ Pull requests are always welcome! Just make sure to follow the code of conduct :
     - [ ] Add system messages (like calls or pins)
     - [ ] Improving html
     - [ ] Adding more themes
+    - [ ] Add some reactivity (eg. actially go to the message being replied to when clicked)
