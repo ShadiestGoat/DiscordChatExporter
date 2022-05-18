@@ -6,7 +6,7 @@
 
 > :warning: This project is out only as a beta, if you see any bugs, please make an issue :warning:
 
-This is a golang implemintation of a discord chat explorer i found a while back & can't find again
+This is a golang implemintation of a discord chat explorer like [this](https://github.com/Tyrrrz/DiscordChatExporter) or [this](https://github.com/mahtoid/DiscordChatExporterPy).
 
 ## Features
 
@@ -18,6 +18,7 @@ This is a golang implemintation of a discord chat explorer i found a while back 
 - Golang superiority
 - Mass downloads from guild(s)
 - Commitments to less bloat
+- Customisability 
 
 ## Setup
 
