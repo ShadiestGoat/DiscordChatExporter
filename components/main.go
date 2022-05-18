@@ -69,7 +69,10 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	theme.GIF = theme.parseComponent("gifs")
 	theme.OTHER_MIME = theme.parseComponent("otherMime")
 	theme.MENTION = theme.parseComponent("mention")
-	theme.EMOJI = theme.parseComponent("emoji")
+	theme.CUSTOM_EMOJI = theme.parseComponent("customEmoji")
+	theme.EMOJI_WRAPPER = theme.parseComponent("emojiWrapper")
+	theme.REACTION_WRAPPER = theme.parseComponent("reactionWrapper")
+	theme.REACTION = theme.parseComponent("reaction")
 
 	theme.DownloadMedia = DW_MEDIA
 }
@@ -91,9 +94,9 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 
 	tmpEmojiContent := customEmojiReg.ReplaceAllString(content, "")
 	tmpEmojiContent = strings.TrimSpace(tmpEmojiContent)
-	isBigEmoji := ""
+	cssClassses := "text-emoji "
 	if tmpEmojiContent == "" {
-		isBigEmoji = "big"
+		cssClassses += "big"
 	}
 
 	for customEmojiReg.MatchString(content) {
@@ -105,11 +108,13 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			format = "gif"
 		}
 		// as used by discord
-		href := fmt.Sprintf("https://cdn.discordapp.com/emojis/%v.%v?size=96&quality=lossless", emojiId, format)
-		content = content[:loc[0]] + tools.ParseTemplate(theme.EMOJI, map[string]string{
-			"URL": href,
-			"BIG": isBigEmoji,
-		}) + content[loc[1]:]
+		href := discord.EmojiURL(emojiId, format)
+		content = content[:loc[0]] + tools.ParseTemplate(theme.EMOJI_WRAPPER, map[string]string{
+			"CONTENT": tools.ParseTemplate(theme.CUSTOM_EMOJI, map[string]string{
+				"URL": href,
+				"CSS_CLASSES": cssClassses,
+			}),
+		})  + content[loc[1]:]
 	}
 
 	for _, attach := range msg.Attachments {
@@ -156,6 +161,27 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 	if msg.IsSystemType {
 		return "TODO:"
 	} else {
+		reactions := ""
+		for _, reaction := range msg.Reactions {
+			emojiStr := ""
+			if reaction.Emoji.ID == "" {
+				emojiStr = reaction.Emoji.Name
+			} else {
+				emojiStr = tools.ParseTemplate(theme.CUSTOM_EMOJI, map[string]string{
+					"CSS_CLASSES": "reaction-emoji",
+					"URL": discord.EmojiURL(reaction.Emoji.ID, "webp"),
+				})
+			}
+			reactions += tools.ParseTemplate(theme.REACTION, map[string]string{
+				"EMOJI": emojiStr,
+				"COUNT": fmt.Sprint(reaction.Count),
+			})
+		}
+	
+		reactions = tools.ParseTemplate(theme.REACTION_WRAPPER, map[string]string{
+			"CONTENT": reactions,
+		})
+	
 		for _, mention := range msg.Mentions {
 			idReg := regexp.MustCompile(fmt.Sprintf(`&lt;@!?%v&gt;`, mention.ID))
 			content = idReg.ReplaceAllString(content, tools.ParseTemplate(theme.MENTION, map[string]string{
@@ -185,6 +211,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 				"REPLY_CONTENT":   replyContent,
 				"STICKER_CONTENT": stickerContent,
 				"GIFS":            gifContents,
+				"REACTIONS":	   reactions,
 			})
 		} else {
 			return tools.ParseTemplate(theme.MSG, map[string]string{
@@ -194,6 +221,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 				"ID":              msg.ID,
 				"STICKER_CONTENT": stickerContent,
 				"GIFS":            gifContents,
+				"REACTIONS":	   reactions,
 			})
 		}
 	}

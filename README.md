@@ -5,6 +5,7 @@
 </p>
 
 > :warning: This project is out only as a beta, if you see any bugs, please make an issue :warning:
+> :warning: Due to this being in beta, API changes are to be expected, even if semver would disagree with this change :warning:
 
 This is a golang implemintation of a discord chat explorer like [this](https://github.com/Tyrrrz/DiscordChatExporter) or [this](https://github.com/mahtoid/DiscordChatExporterPy).
 
@@ -42,9 +43,12 @@ Pull requests are always welcome! Just make sure to follow the code of conduct :
 
 ## Roadmap
 
-1. Make this a more cli friendly map
-    - [ ] Add flags/commands for config
-2. Autoparsing of IDs
-3. Writing tests
-4. Improving html
-5. Adding more themes
+
+- [ ] Add system messages (like calls or pins)
+- [ ] Make this a more cli friendly app
+    - [ ] Add an option for command line flags for config
+    - [ ] Add a global location for themes (probs would have to embed the default ones)
+- [ ] Autoparsing of IDs
+- [ ] Writing tests
+- [ ] Improving html
+- [ ] Adding more themes

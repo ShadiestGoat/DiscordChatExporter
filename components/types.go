@@ -19,7 +19,10 @@ type Theme struct {
 	GIF,
 	OTHER_MIME,
 	MENTION,
-	EMOJI,
+	CUSTOM_EMOJI,
+	EMOJI_WRAPPER,
+	REACTION,
+	REACTION_WRAPPER,
 	IMG string
 	DownloadMedia bool
 }

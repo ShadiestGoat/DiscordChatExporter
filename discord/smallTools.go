@@ -59,3 +59,7 @@ func (attachment Attachment) MediaName() string {
 
 	return attachment.ID + ext
 }
+
+func EmojiURL(id string, format string) string {
+	return fmt.Sprintf("https://cdn.discordapp.com/emojis/%v.%v?size=96&quality=lossless", id, format)
+}

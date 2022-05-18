@@ -1,0 +1,12 @@
+:root {
+    --background-primary: #000;
+    --background-darker: #000;
+    --background-even-darker: #111111;
+    --super-dark: #000;
+    --background-lighter: #0f0f0f;
+    --background-even-lighter: #121213;
+}
+
+.image {
+    opacity: 0.85;
+}

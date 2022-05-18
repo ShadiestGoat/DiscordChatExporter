@@ -337,9 +337,10 @@ p, h1, h2, h3, h4, h5, h6 {
     border-radius: 6.25px;
     width: 80vw;
     display: block;
+    margin: 0.75rem 0px;
 }
 
-.emoji {
+.text-emoji {
     width: 1.4em;
     display: inline;
     margin: 0.1vh;
@@ -350,6 +351,29 @@ p, h1, h2, h3, h4, h5, h6 {
     justify-content: center;
 }
 
-.emoji.big {
+.text-emoji.big {
     width: 3em;
+}
+
+.reaction-wrapper {
+    justify-content: flex-start;
+    margin-top: .5rem;
+}
+
+.reaction {
+    width: 50px;
+    padding: .125rem .375rem;
+    align-items: center;
+    justify-content: space-evenly;
+    background: var(--background-even-darker);
+    border-radius: 6.25px;
+    margin-right: .25rem;
+}
+
+.reaction-counter {
+    min-width: 9px;
+}
+
+.reaction-emoji {
+    width: 1rem;
 }

@@ -68,6 +68,16 @@ type ReplyMsg struct {
 	Author  Author `json:"author"`
 }
 
+type Reaction struct {
+	Emoji Emoji `json:"emoji"`
+	Count int `json:"count"`
+}
+
+type Emoji struct {
+	ID string `json:"id"`
+	Name string `json:"name"`
+}
+
 type Message struct {
 	ReplyMsg
 	Channel          string       `json:"channel_id"`
@@ -79,6 +89,7 @@ type Message struct {
 	Timestamp        int          `json:"timestamp"`
 	Type             MsgType      `json:"type"`
 	Stickers         []Sticker    `json:"sticker_items"`
+	Reactions 		 []Reaction	  `json:"reactions"`
 	IsEdited         bool
 	IsReply          bool
 	IsSystemType     bool

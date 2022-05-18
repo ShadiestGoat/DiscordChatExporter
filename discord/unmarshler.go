@@ -28,6 +28,12 @@ func (msg *Message) UnmarshalJSON(b []byte) error {
 
 	for key, value := range s {
 		switch key {
+		case "reactions":
+			parsed := []Reaction{}
+			err := json.Unmarshal(value, &parsed)
+			tools.PanicIfErr(err)
+
+			msg.Reactions = parsed
 		case "id":
 			parsed := ""
 
