@@ -8,7 +8,7 @@ import (
 	"github.com/ShadiestGoat/DiscordChatExporter/tools"
 )
 
-const VERSION = "0.3.0"
+const VERSION = "0.3.1"
 
 func main() {
 	fmt.Printf("Loading up Discord Channel Exporter v%v\n", VERSION)

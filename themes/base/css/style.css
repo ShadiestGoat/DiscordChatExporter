@@ -17,8 +17,7 @@
 body {
     margin: 0;
     font-family: monospace;
-    font-size: max(1vw/1.1, 10px);
-    /* font: 500  monospace; */
+    font-size: clamp(15px, 1vw/1.1, 20px);
     -webkit-text-size-adjust: 100%;
     display: flex;
     flex-direction: column;
