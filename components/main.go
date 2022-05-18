@@ -84,6 +84,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 	content = template.HTMLEscapeString(content)
 
 	content = newLineReg.ReplaceAllString(content, "<br />")
+	content, _ = MDToHTML(content)
 
 	for _, attach := range msg.Attachments {
 		if attach.ContentType[:5] == "image" {
