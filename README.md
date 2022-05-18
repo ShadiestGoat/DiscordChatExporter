@@ -39,3 +39,12 @@ However, so far, haven't been banned so make your own conclusions.
 ## Contributing
 
 Pull requests are always welcome! Just make sure to follow the code of conduct :)
+
+## Roadmap
+
+1. Make this a more cli friendly map
+    - [ ] Add flags/commands for config
+2. Autoparsing of IDs
+3. Writing tests
+4. Improving html
+5. Adding more themes
