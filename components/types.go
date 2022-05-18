@@ -19,6 +19,7 @@ type Theme struct {
 	GIF,
 	OTHER_MIME,
 	MENTION,
+	EMOJI,
 	IMG string
 	DownloadMedia bool
 }

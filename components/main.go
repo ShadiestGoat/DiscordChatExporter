@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/ShadiestGoat/DiscordChatExporter/discord"
@@ -68,6 +69,7 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 	theme.GIF = theme.parseComponent("gifs")
 	theme.OTHER_MIME = theme.parseComponent("otherMime")
 	theme.MENTION = theme.parseComponent("mention")
+	theme.EMOJI = theme.parseComponent("emoji")
 
 	theme.DownloadMedia = DW_MEDIA
 }
@@ -75,6 +77,7 @@ func (theme *Theme) LoadTheme(themeName string, DW_MEDIA bool) {
 var newLineReg = regexp.MustCompile(`\n`)
 var extraWhitespaceReg = regexp.MustCompile(`\s{2,}`)
 var tabReg = regexp.MustCompile(`\t`)
+var customEmojiReg = regexp.MustCompile(`&lt;a?:[^\s]+:\d+&gt;`)
 
 func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Message, firstMsg bool) string {
 	content := msg.Content
@@ -85,6 +88,29 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 
 	content = newLineReg.ReplaceAllString(content, "<br />")
 	content, _ = MDToHTML(content)
+
+	tmpEmojiContent := customEmojiReg.ReplaceAllString(content, "")
+	tmpEmojiContent = strings.TrimSpace(tmpEmojiContent)
+	isBigEmoji := ""
+	if tmpEmojiContent == "" {
+		isBigEmoji = "big"
+	}
+
+	for customEmojiReg.MatchString(content) {
+		loc := customEmojiReg.FindStringIndex(content)
+		emojiRaw := content[loc[0]:loc[1]]
+		emojiId := emojiRaw[len(emojiRaw)-22 : len(emojiRaw)-4]
+		format := "webp"
+		if emojiRaw[5] == []byte("a")[0] {
+			format = "gif"
+		}
+		// as used by discord
+		href := fmt.Sprintf("https://cdn.discordapp.com/emojis/%v.%v?size=96&quality=lossless", emojiId, format)
+		content = content[:loc[0]] + tools.ParseTemplate(theme.EMOJI, map[string]string{
+			"URL": href,
+			"BIG": isBigEmoji,
+		}) + content[loc[1]:]
+	}
 
 	for _, attach := range msg.Attachments {
 		if attach.ContentType[:5] == "image" {

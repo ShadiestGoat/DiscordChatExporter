@@ -112,12 +112,12 @@ func MDToHTML(content string) (string, bool) {
 			esI++
 		}
 	}
-	
+
 	skipIC := 0
 
 	// inline code index
-	for skipIC != len(mdSpreadInline.Reg.FindAllStringIndex(content, skipIC + 1)) {
-		curLocs := mdSpreadInline.Reg.FindAllStringIndex(content, skipIC + 1)
+	for skipIC != len(mdSpreadInline.Reg.FindAllStringIndex(content, skipIC+1)) {
+		curLocs := mdSpreadInline.Reg.FindAllStringIndex(content, skipIC+1)
 		curLoc := curLocs[skipIC]
 
 		testContent := content[curLoc[0]:curLoc[1]]
@@ -196,7 +196,7 @@ func MDToHTML(content string) (string, bool) {
 			}
 		}
 
-		content = reg.ReplaceAllString(content, prefix + str + suffix)
+		content = reg.ReplaceAllString(content, prefix+str+suffix)
 	}
 
 	for i, str := range escapedSyntaxMap {

@@ -6,6 +6,6 @@ rm -r binaries
 
 mkdir binaries
 
-GOOS=windows go build -o "binaries/${NAME}_win.exe"
+GOOS=windows go build -o "binaries/${NAME}_windows.exe"
 GOOS=darwin go build -o "binaries/${NAME}_mac"
-GOOS=linux go build -o "binaries/${NAME}_lin"
+GOOS=linux go build -o "binaries/${NAME}_linux"
