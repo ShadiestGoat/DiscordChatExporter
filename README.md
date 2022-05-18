@@ -44,11 +44,12 @@ Pull requests are always welcome! Just make sure to follow the code of conduct :
 ## Roadmap
 
 
-- [ ] Add system messages (like calls or pins)
 - [ ] Make this a more cli friendly app
     - [ ] Add an option for command line flags for config
     - [ ] Add a global location for themes (probs would have to embed the default ones)
 - [ ] Autoparsing of IDs
 - [ ] Writing tests
-- [ ] Improving html
-- [ ] Adding more themes
+- [ ] html:
+    - [ ] Add system messages (like calls or pins)
+    - [ ] Improving html
+    - [ ] Adding more themes
