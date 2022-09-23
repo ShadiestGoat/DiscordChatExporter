@@ -4,7 +4,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -50,7 +49,7 @@ func (mask *HeadersMask) Auto() {
 		winMgr += ","
 	}
 
-	osInfo, err := ioutil.ReadFile("/etc/os-release")
+	osInfo, err := os.ReadFile("/etc/os-release")
 	tools.PanicIfErr(err)
 	distro := ""
 

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
@@ -42,7 +41,7 @@ func DownloadMedia(mediaDir string, urlToFetch string, name string) {
 	file, err := os.Create(filepath.Join(mediaDir, name)) // Will overwrite it no matter what, so embed image duplicates are fine :)
 	tools.PanicIfErr(err)
 
-	dwMedia, err := ioutil.ReadAll(resp.Body)
+	dwMedia, err := io.ReadAll(resp.Body)
 	tools.PanicIfErr(err)
 
 	defer file.Close()
@@ -93,7 +92,7 @@ func (conf ConfigType) discordRequest(method string, uri string, body io.Reader,
 
 	res, err := client.Do(req)
 	tools.PanicIfErr(err)
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	tools.PanicIfErr(err)
 
 	if res.StatusCode != 200 {

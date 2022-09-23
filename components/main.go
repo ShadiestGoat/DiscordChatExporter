@@ -3,7 +3,6 @@ package components
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -20,10 +19,10 @@ func preParseHTML(html string) string {
 }
 
 func (theme Theme) parseComponent(component string) string {
-	comp, err := ioutil.ReadFile(filepath.Join(theme.ThemeDir, "components", component+".html"))
+	comp, err := os.ReadFile(filepath.Join(theme.ThemeDir, "components", component+".html"))
 
 	if os.IsNotExist(err) {
-		baseComp, err := ioutil.ReadFile(filepath.Join(theme.BaseCss, "components", component+".html"))
+		baseComp, err := os.ReadFile(filepath.Join(theme.BaseCss, "components", component+".html"))
 		tools.PanicIfErr(err)
 		comp = baseComp
 	} else {

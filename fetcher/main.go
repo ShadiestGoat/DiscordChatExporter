@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -209,7 +208,7 @@ func (conf ConfigType) FetchMain() {
 				tools.PanicIfErr(err)
 			}
 
-			assetsBase, err := ioutil.ReadDir(filepath.Join(theme.BaseCss, "assets"))
+			assetsBase, err := os.ReadDir(filepath.Join(theme.BaseCss, "assets"))
 
 			if os.IsNotExist(err) {
 			} else {
@@ -222,7 +221,7 @@ func (conf ConfigType) FetchMain() {
 				tools.PanicIfErr(err)
 			}
 
-			assetsTheme, err := ioutil.ReadDir(filepath.Join(theme.ThemeDir, "assets"))
+			assetsTheme, err := os.ReadDir(filepath.Join(theme.ThemeDir, "assets"))
 
 			if os.IsNotExist(err) {
 			} else {
