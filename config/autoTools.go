@@ -79,7 +79,7 @@ func (mask HeadersMask) PullBuildId() string {
 	resp, err := io.ReadAll(respRaw.Body)
 	tools.PanicIfErr(err)
 	assets := discordAssetReg.FindAll(resp, 200)
-	
+
 	foundNumber := ""
 
 	for _, asset := range assets[len(assets)-7:] {
@@ -87,16 +87,20 @@ func (mask HeadersMask) PullBuildId() string {
 		tools.PanicIfErr(err)
 		buildFile, err := io.ReadAll(buildFileRaw.Body)
 		tools.PanicIfErr(err)
-	
+
 		buildFileS := buildFile
 
 		buildLoc := buildNumReg.FindIndex(buildFileS)
-		
+
 		if len(buildLoc) != 0 {
 			outLoc := buildNumVReg.FindIndex(buildFileS[buildLoc[1]:])
-			if len(outLoc) == 0 {continue}
-			if outLoc[0] > 20 {continue}
-			out := buildFileS[buildLoc[1]+outLoc[0]:buildLoc[1]+outLoc[1]]
+			if len(outLoc) == 0 {
+				continue
+			}
+			if outLoc[0] > 20 {
+				continue
+			}
+			out := buildFileS[buildLoc[1]+outLoc[0] : buildLoc[1]+outLoc[1]]
 			foundNumber = string(out)
 			break
 		}

@@ -70,11 +70,11 @@ type ReplyMsg struct {
 
 type Reaction struct {
 	Emoji Emoji `json:"emoji"`
-	Count int `json:"count"`
+	Count int   `json:"count"`
 }
 
 type Emoji struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -89,7 +89,7 @@ type Message struct {
 	Timestamp        int          `json:"timestamp"`
 	Type             MsgType      `json:"type"`
 	Stickers         []Sticker    `json:"sticker_items"`
-	Reactions 		 []Reaction	  `json:"reactions"`
+	Reactions        []Reaction   `json:"reactions"`
 	IsEdited         bool
 	IsReply          bool
 	IsSystemType     bool

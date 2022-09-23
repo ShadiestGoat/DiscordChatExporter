@@ -110,10 +110,10 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 		href := discord.EmojiURL(emojiId, format)
 		content = content[:loc[0]] + tools.ParseTemplate(theme.EMOJI_WRAPPER, map[string]string{
 			"CONTENT": tools.ParseTemplate(theme.CUSTOM_EMOJI, map[string]string{
-				"URL": href,
+				"URL":         href,
 				"CSS_CLASSES": cssClassses,
 			}),
-		})  + content[loc[1]:]
+		}) + content[loc[1]:]
 	}
 
 	for _, attach := range msg.Attachments {
@@ -168,7 +168,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 			} else {
 				emojiStr = tools.ParseTemplate(theme.CUSTOM_EMOJI, map[string]string{
 					"CSS_CLASSES": "reaction-emoji",
-					"URL": discord.EmojiURL(reaction.Emoji.ID, "webp"),
+					"URL":         discord.EmojiURL(reaction.Emoji.ID, "webp"),
 				})
 			}
 			reactions += tools.ParseTemplate(theme.REACTION, map[string]string{
@@ -176,11 +176,11 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 				"COUNT": fmt.Sprint(reaction.Count),
 			})
 		}
-	
+
 		reactions = tools.ParseTemplate(theme.REACTION_WRAPPER, map[string]string{
 			"CONTENT": reactions,
 		})
-	
+
 		for _, mention := range msg.Mentions {
 			idReg := regexp.MustCompile(fmt.Sprintf(`&lt;@!?%v&gt;`, mention.ID))
 			content = idReg.ReplaceAllString(content, tools.ParseTemplate(theme.MENTION, map[string]string{
@@ -210,7 +210,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 				"REPLY_CONTENT":   replyContent,
 				"STICKER_CONTENT": stickerContent,
 				"GIFS":            gifContents,
-				"REACTIONS":	   reactions,
+				"REACTIONS":       reactions,
 			})
 		} else {
 			return tools.ParseTemplate(theme.MSG, map[string]string{
@@ -220,7 +220,7 @@ func (theme Theme) MessageComponent(msg discord.Message, previousMsg discord.Mes
 				"ID":              msg.ID,
 				"STICKER_CONTENT": stickerContent,
 				"GIFS":            gifContents,
-				"REACTIONS":	   reactions,
+				"REACTIONS":       reactions,
 			})
 		}
 	}
